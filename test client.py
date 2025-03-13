@@ -90,4 +90,4 @@ if __name__ == "__main__":
         elif command == "3":
             break
         else:
-            print("Invalid command! Please enter '1' or '2' or '3'.")
+            print("Invalid command! Please enter '1' or '2' or '3'")
