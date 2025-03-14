@@ -14,12 +14,12 @@ def register (details):
     _, rq, name, role, ipAddr, udpSocket, tcpSocket = parts
 
     if len(parts) != 7:
-        return "Invalid format"
+        return f"INVALID COMMAND {rq}"
     elif name in registeredUsers:
-        return "User is already registered"
+        return f"REGISTERED-DENIED {rq} name already in use"
     else:
         registeredUsers[name] = {"rq": rq, "name": name, "role": role, "ipAddr": ipAddr, "udpSocket": udpSocket, "tcpSocket": tcpSocket}
-        return "User is registered"
+        return f"REGISTERED {rq}"
 
 def deregister(details):
     parts = details.split(" ")
@@ -27,7 +27,7 @@ def deregister(details):
     _, rq, name = parts
 
     if len(parts) != 3:
-        return "Invalid format"
+        return f"INVALID COMMAND {rq}"
     elif name in registeredUsers:
         del registeredUsers[name]
 
