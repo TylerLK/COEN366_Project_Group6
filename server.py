@@ -1,5 +1,9 @@
 import socket
 import sys
+import pickle
+
+# User-defined functions
+from registration import *
 
 # server config
 UDP_IP = "0.0.0.0"
@@ -30,7 +34,6 @@ def deregister(details):
         return f"INVALID COMMAND {rq}"
     elif name in registeredUsers:
         del registeredUsers[name]
-
 
 def startServer():
     # create UDP server
