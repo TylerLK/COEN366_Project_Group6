@@ -1,6 +1,7 @@
 import random
 import socket
 import sys
+import pickle
 
 from server import deregister
 
