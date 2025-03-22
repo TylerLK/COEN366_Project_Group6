@@ -2,14 +2,17 @@
 import socket
 import sys
 import pickle
+import threading
 
-# User-defined functions
+# User-Defined Modules
 from registration import registration_handling, deregistration_handling, REGISTERED, REGISTER_DENIED
+from item_listing import ITEM_LISTED, LIST_DENIED
 
 # Server Class (PRELIMINARY) --> Server behaviour will be migrated into this class
 class Server:
     # Attributes
-    registered_clients = {}
+    registered_clients = {} # A dictionary containing the existing clients
+    listed_items = {} # A dictionary containing the items that are up for auction
     
     # Methods
     def __init__(self):
@@ -25,7 +28,6 @@ class Server:
         except socket.error as e:
             print(f"Failed to create a UDP Datagram Socket.  Error code: {str(e[0])}, Message: {str(e[1])}")
             sys.exit()
-        
         # Bind the newly created UDP Datagram Sokcet to an IP Address and Port Number
         try:
             UDP_sock.bind((self.HOST, self.UDP_PORT))
@@ -35,11 +37,23 @@ class Server:
             sys.exit()
         print(f"UDP Datagram Socket binding complete.")
 
-        while True:
-            # TODO: Move UDP listening behaviour here.
-            print(f"Receiving messages from clients...")
+        # Create a TCP Socket
+        try:
+            TCP_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        except socket.error as e:
+            print(f"Failed to create a TCP Socket. Error code: {str(e[0])}, Message: {str(e[1])}")
+            sys.exit()
+        # Bind the newly created TCP Socket to an IP Address and Port Number
+        try:
+            TCP_sock.bind((self.HOST, self.TCP_PORT))
+            print(f"TCP Socket binding to {self.HOST}:{self.TCP_PORT}...")
+        except socket.error as e:
+            print(f"Bind failed.  Error Code: {str(e[0])}, Message: {str(e[1])}")
+            sys.exit()
+        print(f"TCP Socket binding complete.")
+
+    # TODO: Move UDP and TCP listening behaviour here.
         
-        # TODO: Create a TCP socket, bind the socket, and create listening behaviour
 # End of Server Class
 
 # server config
@@ -93,25 +107,25 @@ def startServer():
 
     # server loop
     try:
-        while True:
+        while 1:
             try:
                 data, addr = sock.recvfrom(1024)  # Buffer size: 1024 bytes
                 if not data:
                     continue
                 print("Received data from client" + str(addr))
 
-                message = data.decode()
+                message = pickle.loads(data)
 
                 # Determine type of message
                 if message.startswith("REGISTER"):
-                    reply = register (message)
+                    reply = register(message)
                 elif message.startswith("DEREGISTER"):
                     reply = deregister(message)
                 else:
                     reply = "INVALID REQUEST"
 
 
-                sock.sendto(reply.encode(), addr)
+                sock.sendto(pickle.dumps(reply), addr)
 
             except socket.error as msg:
                 print("Socket error: " + str(msg))
