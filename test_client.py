@@ -13,6 +13,7 @@ SERVER_PORT = 5000
 UDP_PORT = None
 TCP_PORT = None
 
+# TODO: Iplement timers to check if a client has received an acknoledgement from the server.
 
 def connectToServer():
     # Create UDP Socket
@@ -30,7 +31,7 @@ def connectToServer():
 
 def sendUdpRequest(SERVER_IP, SERVER_PORT, message):
     client_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    client_socket.sendto(message.encode(), (SERVER_IP, SERVER_PORT))
+    client_socket.sendto(pickle.dumps(message), (SERVER_IP, SERVER_PORT))
 
     # Verify if connection is set
     if UDP_PORT is not None:
@@ -41,7 +42,7 @@ def sendUdpRequest(SERVER_IP, SERVER_PORT, message):
     try:
         client_socket.settimeout(5)  # Avoid infinite waiting
         data, _ = client_socket.recvfrom(1024)
-        print(f"Server response: {data.decode()}")
+        print(f"Server response: {pickle.loads(data)}")
     except socket.timeout:
         print("No response from server.")
 
