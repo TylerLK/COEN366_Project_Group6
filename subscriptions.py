@@ -43,12 +43,23 @@ def DE_SUBSCRIBE():
 
 subscriptions = {} # from item name contain list of users subscribed 
 def handle_subscribe(sock, address, data):
-    rq = data["rq"]
-    item_name = data["item_name"]
-    client_name = data["client_name"] #does this exist in this data dictionary?
+    rq = data.get("rq")
+    item_name = data.get("item_name")
+    client_name = data.get("client_name") 
 
-    if item_name not in subscriptons: 
-        subscriptions[item_name] = []
-    
-    else: 
-        subscriptions[item_name].append(name) # store list of name for users subscribed to item???
+    # Validate the input data
+    if not rq or not item_name or not client_name:
+        SUBSCRIBE_DENIED(sock, address, rq, "Missing required fields (rq, item_name, or client_name)")
+        return
+
+    # Check if the item already exists in the subscriptions dictionary
+    if item_name not in subscriptions:
+        subscriptions[item_name] = []  # Initialize an empty list for this item
+
+    # Check if the client is already subscribed
+    if client_name not in subscriptions[item_name]:
+        subscriptions[item_name].append(client_name)  # Add the client's name to the list
+        SUBSCRIBED(sock, address, rq)  # Send a success response
+    else:
+        # If the client is already subscribed, deny the subscription
+        SUBSCRIBE_DENIED(sock, address, rq, "Client is already subscribed to this item")
