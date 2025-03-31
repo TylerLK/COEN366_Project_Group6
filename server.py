@@ -5,14 +5,16 @@ import pickle
 import threading
 
 # User-Defined Modules
-from registration import registration_handling, deregistration_handling, REGISTERED, REGISTER_DENIED
+from registration import registration_handling, deregistration_handling
 from item_listing import ITEM_LISTED, LIST_DENIED
 
-# Server Class (PRELIMINARY) --> Server behaviour will be migrated into this class
+# Server Class
 class Server:
     # Attributes
+    rq = 1 # A variable that will keep track of the different communication links between the server and clients
     registered_clients = {} # A dictionary containing the existing clients
     listed_items = {} # A dictionary containing the items that are up for auction
+    client_bids = {} # A dictionary containing the client bids for each item
     
     # Methods
     def __init__(self):
@@ -24,33 +26,33 @@ class Server:
         # Create a UDP Datagram Socket
         try:
             UDP_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-            print(f"UDP Datagram Socket created...")
+            print(f"UDP Datagram Socket created... \n")
         except socket.error as e:
-            print(f"Failed to create a UDP Datagram Socket.  Error code: {str(e[0])}, Message: {str(e[1])}")
+            print(f"Failed to create a UDP Datagram Socket.  Error code: {str(e[0])}, Message: {str(e[1])} \n")
             sys.exit()
         # Bind the newly created UDP Datagram Sokcet to an IP Address and Port Number
         try:
             UDP_sock.bind((self.HOST, self.UDP_PORT))
-            print(f"UDP Datagram Socket binding to {self.HOST}:{self.UDP_PORT}...")
+            print(f"UDP Datagram Socket binding to {self.HOST}:{self.UDP_PORT}... \n")
         except socket.error as e:
-            print(f"Bind failed.  Error Code: {str(e[0])}, Message: {str(e[1])}")
+            print(f"Bind failed.  Error Code: {str(e[0])}, Message: {str(e[1])} \n")
             sys.exit()
-        print(f"UDP Datagram Socket binding complete.")
+        print(f"UDP Datagram Socket binding complete. \n")
 
         # Create a TCP Socket
         try:
             TCP_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         except socket.error as e:
-            print(f"Failed to create a TCP Socket. Error code: {str(e[0])}, Message: {str(e[1])}")
+            print(f"Failed to create a TCP Socket. Error code: {str(e[0])}, Message: {str(e[1])} \n")
             sys.exit()
         # Bind the newly created TCP Socket to an IP Address and Port Number
         try:
             TCP_sock.bind((self.HOST, self.TCP_PORT))
-            print(f"TCP Socket binding to {self.HOST}:{self.TCP_PORT}...")
+            print(f"TCP Socket binding to {self.HOST}:{self.TCP_PORT}... \n")
         except socket.error as e:
-            print(f"Bind failed.  Error Code: {str(e[0])}, Message: {str(e[1])}")
+            print(f"Bind failed.  Error Code: {str(e[0])}, Message: {str(e[1])} \n")
             sys.exit()
-        print(f"TCP Socket binding complete.")
+        print(f"TCP Socket binding complete. \n")
 
     # TODO: Move UDP and TCP listening behaviour here.
         
@@ -114,13 +116,22 @@ def startServer():
                     continue
                 print("Received data from client" + str(addr))
 
-                message = pickle.loads(data)
+                try:
+                    # Attempt to deserialize the message sent by a client.
+                    message = pickle.loads(data)
+                except pickle.UnpicklingError as e:
+                    print(f"Faulty message received from client at {addr[0]}:{str(addr[1])}.  Error Code: {str(e[0])}, Message: {e[1]} \n")
+                    error_message = f"Error occured while processing your message... \n"
+                    sock.sendto(pickle.dumps(error_message), addr)
+                    continue
 
                 # Determine type of message
                 if message.startswith("REGISTER"):
-                    reply = register(message)
+                    registeredUsers = registration_handling(message, registeredUsers, sock, addr)
+                    # reply = register(message)
                 elif message.startswith("DEREGISTER"):
-                    reply = deregister(message)
+                    registeredUsers = deregistration_handling(message, registeredUsers, sock, addr)
+                    # reply = deregister(message)
                 else:
                     reply = "INVALID REQUEST"
 
