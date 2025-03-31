@@ -21,132 +21,91 @@ class Server:
         self.HOST = '0.0.0.0'
         self.UDP_PORT = 5000
         self.TCP_PORT = 6000
+        self.UDP_SOCKET = None
+        self.TCP_SOCKET = None
     
     def startServer(self):
         # Create a UDP Datagram Socket
         try:
-            UDP_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            self.UDP_SOCKET = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
             print(f"UDP Datagram Socket created... \n")
         except socket.error as e:
-            print(f"Failed to create a UDP Datagram Socket.  Error code: {str(e[0])}, Message: {str(e[1])} \n")
+            print(f"Failed to create a UDP Datagram Socket.  Error: {str(e)} \n")
             sys.exit()
         # Bind the newly created UDP Datagram Sokcet to an IP Address and Port Number
         try:
-            UDP_sock.bind((self.HOST, self.UDP_PORT))
+            self.UDP_SOCKET.bind((self.HOST, self.UDP_PORT))
             print(f"UDP Datagram Socket binding to {self.HOST}:{self.UDP_PORT}... \n")
         except socket.error as e:
-            print(f"Bind failed.  Error Code: {str(e[0])}, Message: {str(e[1])} \n")
+            print(f"Bind failed.  Error: {str(e)} \n")
             sys.exit()
         print(f"UDP Datagram Socket binding complete. \n")
+        # Start a thread to handle incoming UDP messages
+        udp_thread = threading.Thread(target=self.udpMessageReceiver, args=())
+        udp_thread.start()
 
         # Create a TCP Socket
         try:
-            TCP_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            self.TCP_SOCKET = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         except socket.error as e:
-            print(f"Failed to create a TCP Socket. Error code: {str(e[0])}, Message: {str(e[1])} \n")
+            print(f"Failed to create a TCP Socket. Error: {str(e)} \n")
             sys.exit()
         # Bind the newly created TCP Socket to an IP Address and Port Number
         try:
-            TCP_sock.bind((self.HOST, self.TCP_PORT))
+            self.TCP_SOCKET.bind((self.HOST, self.TCP_PORT))
             print(f"TCP Socket binding to {self.HOST}:{self.TCP_PORT}... \n")
         except socket.error as e:
-            print(f"Bind failed.  Error Code: {str(e[0])}, Message: {str(e[1])} \n")
+            print(f"Bind failed.  Error: {str(e)} \n")
             sys.exit()
         print(f"TCP Socket binding complete. \n")
+    
+    # UDP Handling
+    def udpCommunicationHandling(self, message, client_address, udp_socket):
+        try:
+            print(f"A UDP Request has been received from {client_address[0]}:{str(client_address[1])}... \n")
 
-    # TODO: Move UDP and TCP listening behaviour here.
-        
-# End of Server Class
+            # Determien the type of message that needs to be handled, and apply the appropriate method.
+            if message.startswith("REGISTER"):
+                self.registered_clients = registration_handling(message, self.registered_clients, udp_socket, client_address)
+            elif message.startswith("DEREGISTER"):
+                self.registered_clients = deregistration_handling(message, self.registered_clients, udp_socket, client_address)
+            else:
+                reply = f"Invalid UDP communication request: {message} \n"
+                print(reply)
+                self.UDP_SOCKET.sendto(pickle.dumps(reply), client_address)
+        except Exception as e:
+            print(f"UDP Communication Handling failed.  Error: {str(e)} \n")
 
-# server config
-UDP_IP = "0.0.0.0"
-UDP_PORT = 5000
-
-# user dictionary
-registeredUsers = {}
-
-# TODO: Replace with registration_handling
-def register (details):
-    parts = details.split(" ")
-
-    _, rq, name, role, ipAddr, udpSocket, tcpSocket = parts
-
-    if len(parts) != 7:
-        return f"INVALID COMMAND {rq}"
-    elif name in registeredUsers:
-        return f"REGISTERED-DENIED {rq} name already in use"
-    else:
-        registeredUsers[name] = {"rq": rq, "name": name, "role": role, "ipAddr": ipAddr, "udpSocket": udpSocket, "tcpSocket": tcpSocket}
-        return f"REGISTERED {rq}"
-
-# TODO: Replace with deregistration_handling
-def deregister(details):
-    parts = details.split(" ")
-
-    _, rq, name = parts
-
-    if len(parts) != 3:
-        return f"INVALID COMMAND {rq}"
-    elif name in registeredUsers:
-        del registeredUsers[name]
-
-def startServer():
-    # create UDP server
-    try:
-        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        print("Socket Created")
-    except socket.error as msg:
-        print("Failed to create socket: " + str(msg))
-        sys.exit()
-
-    # bind server to port 5000
-    try:
-        sock.bind((UDP_IP, UDP_PORT))
-        print("Socket bind to port 5000 completed")
-    except socket.error as msg:
-        print("Failed to bind to port 5000: " + str(msg))
-        sys.exit()
-
-    # server loop
-    try:
-        while 1:
+    # This method will handle incoming UDP messages from clients.
+    def udpMessageReceiver(self):
+        while True:
             try:
-                data, addr = sock.recvfrom(1024)  # Buffer size: 1024 bytes
-                if not data:
-                    continue
-                print("Received data from client" + str(addr))
+                data, client_address = self.UDP_SOCKET.recvfrom(1024)
+                print(f"Message received from a client at {client_address[0]}:{str(client_address[1])}... \n")
 
                 try:
                     # Attempt to deserialize the message sent by a client.
                     message = pickle.loads(data)
                 except pickle.UnpicklingError as e:
-                    print(f"Faulty message received from client at {addr[0]}:{str(addr[1])}.  Error Code: {str(e[0])}, Message: {e[1]} \n")
+                    print(f"Faulty message received from client at {client_address[0]}:{str(client_address[1])}.  Error Code: {str(e[0])}, Message: {e[1]} \n")
                     error_message = f"Error occured while processing your message... \n"
-                    sock.sendto(pickle.dumps(error_message), addr)
+                    self.UDP_SOCKET.sendto(pickle.dumps(error_message), client_address)
                     continue
 
-                # Determine type of message
-                if message.startswith("REGISTER"):
-                    registeredUsers = registration_handling(message, registeredUsers, sock, addr)
-                    # reply = register(message)
-                elif message.startswith("DEREGISTER"):
-                    registeredUsers = deregistration_handling(message, registeredUsers, sock, addr)
-                    # reply = deregister(message)
-                else:
-                    reply = "INVALID REQUEST"
+                # Echo the received message back to the client
+                response = f"Echo: {message} \n"
+                self.UDP_SOCKET.sendto(pickle.dumps(response), client_address)
 
+                # TODO: Change this behaviour to actually handle the message correctly.
 
-                sock.sendto(pickle.dumps(reply), addr)
+            except Exception as e:
+                print(f"Error: {e}")     
 
-            except socket.error as msg:
-                print("Socket error: " + str(msg))
-
-    except KeyboardInterrupt:
-        print("\nServer shutting down...")
-
-    finally:
-        print("Closing socket...")
-        sock.close()
+    # TCP Handling
+    def tcpCommunicationHandling(self):
+        print(f"The server is handling TCP communication... \n") 
+# End of Server Class
 
 if __name__ == "__main__":
-    startServer()
+    server = Server()
+    server.startServer()
