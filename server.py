@@ -10,13 +10,13 @@ from item_listing import ITEM_LISTED, LIST_DENIED
 
 # Server Class
 class Server:
-    # Attributes
+    ### Attributes
     rq = 1 # A variable that will keep track of the different communication links between the server and clients
     registered_clients = {} # A dictionary containing the existing clients
     listed_items = {} # A dictionary containing the items that are up for auction
     client_bids = {} # A dictionary containing the client bids for each item
     
-    # Methods
+    ### Methods
     def __init__(self):
         self.HOST = '0.0.0.0'
         self.UDP_PORT = 5000
@@ -59,12 +59,12 @@ class Server:
             sys.exit()
         print(f"TCP Socket binding complete. \n")
     
-    # UDP Handling
+    ## UDP Handling
     def udpCommunicationHandling(self, message, client_address, udp_socket):
         try:
             print(f"A UDP Request has been received from {client_address[0]}:{str(client_address[1])}... \n")
 
-            # Determien the type of message that needs to be handled, and apply the appropriate method.
+            # Determine the type of message that needs to be handled, and apply the appropriate method.
             if message.startswith("REGISTER"):
                 self.registered_clients = registration_handling(message, self.registered_clients, udp_socket, client_address)
             elif message.startswith("DEREGISTER"):
@@ -101,7 +101,7 @@ class Server:
             except Exception as e:
                 print(f"Error: {e}")     
 
-    # TCP Handling
+    ## TCP Handling
     def tcpCommunicationHandling(self):
         print(f"The server is handling TCP communication... \n") 
 # End of Server Class
