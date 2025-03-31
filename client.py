@@ -31,14 +31,14 @@ class Client:
             self.udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
             print(f"UDP Datagram Socket created... \n")
         except socket.error as e:
-            print(f"Failed to create a UDP Datagram Socket.  Error code: {str(e[0])}, Message: {str(e[1])} \n")
+            print(f"Failed to create a UDP Datagram Socket.  Error: {str(e)} \n")
             sys.exit()
         # Bind the newly created UDP Datagram Sokcet to an IP Address and Port Number
         try:
             self.udp_socket.bind((self.ip_address, 0)) # Putting 0 means that an avilable port will be found
             print(f"UDP Datagram Socket binding... \n")
         except socket.error as e:
-            print(f"Bind failed.  Error Code: {str(e[0])}, Message: {str(e[1])} \n")
+            print(f"Bind failed.  Error: {str(e)} \n")
             sys.exit()
         # Set the client's UDP port number
         self.udp_port = self.udp_socket.getsockname()[1]
@@ -48,28 +48,31 @@ class Client:
         try:
             self.tcp_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         except socket.error as e:
-            print(f"Failed to create a TCP Socket. Error code: {str(e[0])}, Message: {str(e[1])} \n")
+            print(f"Failed to create a TCP Socket. Error: {str(e)} \n")
             sys.exit()
         # Bind the newly created TCP Socket to an IP Address and Port Number
         try:
             self.tcp_socket.bind((self.ip_address, 0)) # Putting 0 means that an avilable port will be found
             print(f"TCP Socket binding... \n")
         except socket.error as e:
-            print(f"Bind failed.  Error Code: {str(e[0])}, Message: {str(e[1])} \n")
+            print(f"Bind failed.  Error: {str(e)} \n")
             sys.exit()
         self.tcp_port = self.tcp_socket.getsockname()[1]
         print(f"TCP Socket binding complete.  Bound at {self.ip_address}:{self.tcp_port} \n")
+# END Client Class
 
 
 # This class will define behaviour specific to seller clients
 class Seller (Client):
     def __init__(self, name):
         super().__init__(name, "Seller")
+# END Seller Class
 
 # This class will define behaviour specific to buyer clients
 class Buyer (Client):
     def __init__(self, name):
         super().__init__(name, "Buyer")
+# END Buyer Class
 
 if __name__ == "__main__":
     print(f"Welcome to the Peer-to-Peer Auction System! \n")

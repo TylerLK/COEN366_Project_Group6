@@ -36,7 +36,7 @@ def registration_handling(registration_request, registered_users, server_socket,
         REGISTERED(server_socket, client_address, registration_confirmation_message)
         print(registration_confirmation_message)
         return registered_users
-# END registeration_handling
+# END registration_handling
 
 # This method will allow the server to internally process an incoming deregistration request from a client
 def deregistration_handling(deregistration_request, registered_users, server_socket, client_address):
