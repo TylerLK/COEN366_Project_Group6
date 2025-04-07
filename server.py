@@ -3,10 +3,11 @@ import socket
 import sys
 import pickle
 import threading
+import time
 
 # User-Defined Modules
 from registration import registration_handling, deregistration_handling
-from item_listing import ITEM_LISTED, LIST_DENIED
+#from auction_update_server import list_item_response, monitor_auctions, negotiation_response
 
 # Server Class
 class Server:
@@ -23,7 +24,55 @@ class Server:
         self.TCP_PORT = 6000
         self.UDP_SOCKET = None
         self.TCP_SOCKET = None
-    
+
+    def list_item_response(self, request_data, addr):
+   
+     try:
+        request_id = request_data.get("RQ#")
+        item_name = request_data.get("Item_Name")
+        item_description = request_data.get("Item_Description")
+        start_price = request_data.get("Start_Price")
+        duration = request_data.get("Duration")
+
+        
+
+        if not str(start_price).isdigit():
+            response = {"Server Response": "LIST_DENIED", "RQ#": request_id, "Reason": "Invalid start price."}
+            self.UDP_SOCKET.sendto(pickle.dumps(response), addr)
+            return
+
+        if not str(duration).isdigit():
+            response = {"Server Response": "LIST_DENIED", "RQ#": request_id, "Reason": "Invalid duration."}
+            self.UDP_SOCKET.sendto(pickle.dumps(response), addr)
+            return
+
+        if len(self.listed_items) >= 100:
+            response = {"Server Response": "LIST_DENIED", "RQ#": request_id, "Reason": "Auction capacity reached"}
+            self.UDP_SOCKET.sendto(pickle.dumps(response), addr)
+            return
+
+        start_price = int(start_price)
+        duration = int(duration)
+        start_time = time.time()
+        self.listed_items[item_name]={
+            "Item_Name": item_name,
+            "Item_Description": item_description,
+            "Start_Price": start_price,
+            "Duration": duration,
+            "Start_Time": start_time,
+            "Client_Addr": addr,
+            "Prev_Negotiated": False
+        }
+       
+
+        response = {"Server Response": "ITEM_LISTED", "RQ#": request_id}
+        self.UDP_SOCKET.sendto(pickle.dumps(response), addr)
+
+     except Exception as e:
+        print(f"Error processing request: {e}")
+        error_response = {"Server Response": "LIST_DENIED", "RQ#": "N/A", "Reason": str(e)}
+        self.UDP_SOCKET.sendto(pickle.dumps(error_response), addr)
+
     def startServer(self):
         # Create a UDP Datagram Socket
         try:
@@ -60,20 +109,36 @@ class Server:
         print(f"TCP Socket binding complete. \n")
     
     ## UDP Handling
-    def udpCommunicationHandling(self, message, client_address, udp_socket):
-        try:
-            print(f"A UDP Request has been received from {client_address[0]}:{str(client_address[1])}... \n")
-
+    def udpCommunicationHandling(self, request_data, client_address, udp_socket):
+     try:
+         print(f"A UDP Request has been received from {client_address[0]}:{str(client_address[1])}... \n")
+         try:
+          
+            #request_data = pickle.loads(message)
+            request_type = request_data.get("Type")
             # Determine the type of message that needs to be handled, and apply the appropriate method.
-            if message.startswith("REGISTER"):
-                self.registered_clients = registration_handling(message, self.registered_clients, udp_socket, client_address)
-            elif message.startswith("DEREGISTER"):
-                self.registered_clients = deregistration_handling(message, self.registered_clients, udp_socket, client_address)
+            if request_type==("REGISTER"):
+                self.registered_clients = registration_handling(request_data, self.registered_clients, udp_socket, client_address)
+            elif request_type==("DEREGISTER"):
+                self.registered_clients = deregistration_handling(request_data, self.registered_clients, udp_socket, client_address)
+            elif request_type==("NEGOTIATE_RESPONSE"):
+                self.negotiation_response(request_data, client_address)
+            elif request_type==("LIST_ITEM"):
+                self.list_item_response(request_data, client_address)
             else:
-                reply = f"Invalid UDP communication request: {message} \n"
-                print(reply)
+                    reply = f"Invalid UDP communication request type: {request_type} \n"
+                    print(reply)
+                    self.UDP_SOCKET.sendto(pickle.dumps(reply), client_address)
+         except pickle.UnpicklingError as e:
+                print(f"Error decoding UDP message: {e}")
+                reply = "Error decoding your message."
                 self.UDP_SOCKET.sendto(pickle.dumps(reply), client_address)
-        except Exception as e:
+         except Exception as e:
+                print(f"Error handling UDP request: {e}")
+                reply = "Error processing your request."
+                self.UDP_SOCKET.sendto(pickle.dumps(reply), client_address)
+
+     except Exception as e:
             print(f"UDP Communication Handling failed.  Error: {str(e)} \n")
 
     # This method will handle incoming UDP messages from clients.
@@ -85,16 +150,16 @@ class Server:
 
                 try:
                     # Attempt to deserialize the message sent by a client.
-                    message = pickle.loads(data)
+                    request_data = pickle.loads(data)
                 except pickle.UnpicklingError as e:
                     print(f"Faulty message received from client at {client_address[0]}:{str(client_address[1])}.  Error Code: {str(e[0])}, Message: {e[1]} \n")
                     error_message = f"Error occured while processing your message... \n"
                     self.UDP_SOCKET.sendto(pickle.dumps(error_message), client_address)
                     continue
-
+                self.udpCommunicationHandling(request_data, client_address, self.UDP_SOCKET)
                 # Echo the received message back to the client
-                response = f"Echo: {message} \n"
-                self.UDP_SOCKET.sendto(pickle.dumps(response), client_address)
+                # response = f"Echo: {message} \n"
+                # self.UDP_SOCKET.sendto(pickle.dumps(response), client_address)
 
                 # TODO: Change this behaviour to actually handle the message correctly.
 
