@@ -7,15 +7,84 @@ import time
 
 # User-Defined Modules
 from registration import registration_handling, deregistration_handling
-#from auction_update_server import list_item_response, monitor_auctions, negotiation_response
+
+from item_listing import ITEM_LISTED, LIST_DENIED
+from subscriptions import subscription_handling, desubscription_handling
+
 
 # Server Class
 class Server:
     ### Attributes
-    rq = 1 # A variable that will keep track of the different communication links between the server and clients
-    registered_clients = {} # A dictionary containing the existing clients
-    listed_items = {} # A dictionary containing the items that are up for auction
-    client_bids = {} # A dictionary containing the client bids for each item
+    # A variable that will keep track of the different communication links between the server and clients
+    rq = 1 
+    
+    # A dictionary containing the existing clients
+    registered_clients = {
+        # "client_name": {
+        #     "rq": rq,
+        #     "role": role,
+        #     "ip_address": ip_address,
+        #     "udp_port": udp_port,
+        #     "tcp_port": tcp_port
+        # },
+        # ...
+    } 
+    
+    # A dictionary containing the items that are up for auction
+    listed_items = {
+        # "item_name": {
+        #     "item_description": item_description,
+        #     "start_price": start_price,
+        #     "duration": auction_duration,
+        #     "seller_name": seller
+        # },
+        # ...
+    }
+
+    # A dictionary containing the clients that are subscribed to a given item
+    item_subscriptions = {
+        # "item_name": {
+        #     "rq": rq,
+        #     "subscribed_clients": [
+        #          "client_name_1",
+        #          "client_name_2",
+        #          ...
+        #     ]
+        # },
+        # ...
+    }
+
+    # A dictionary conatining the current auctions that are being conducted by the server
+    active_auctions = {
+        # "item_name": {
+        #     "rq": rq,
+        #     "item_description": description,
+        #     "current_price": price,
+        #     "time_left": time,
+        # },
+        # ...
+    }
+
+    # A dictionary containing the client bids for each item
+    client_bids = {
+        # "item_name": {
+        #     "client_name_1" : bid_amount_1,
+        #     "client_name_2" : bid_amount_2,
+        #     ...
+        #  },
+        #  ...
+    }
+
+    # A dictionary containing the auctions that have been completed by the server
+    completed_auctions = {
+        # "item_name": {
+        #     "rq": rq,
+        #     "final_price": price,
+        #     "buyer_name": buyer,
+        #     "seller_name": seller,
+        # },
+        # ...
+    }
     
     ### Methods
     def __init__(self):
@@ -117,14 +186,21 @@ class Server:
             #request_data = pickle.loads(message)
             request_type = request_data.get("Type")
             # Determine the type of message that needs to be handled, and apply the appropriate method.
-            if request_type==("REGISTER"):
-                self.registered_clients = registration_handling(request_data, self.registered_clients, udp_socket, client_address)
-            elif request_type==("DEREGISTER"):
-                self.registered_clients = deregistration_handling(request_data, self.registered_clients, udp_socket, client_address)
+
+
+            if message.startswith("REGISTER"):
+                self.registered_clients = registration_handling(message, self.registered_clients, udp_socket, client_address)
+            elif message.startswith("DEREGISTER"):
+                self.registered_clients = deregistration_handling(message, self.registered_clients, udp_socket, client_address)
+            elif message.startswith("SUBSCRIBE"):
+                self.item_subscriptions = subscription_handling(message, self.item_subscriptions, udp_socket, client_address)
+            elif message.startswith("DESUBSCRIBE"):
+                self.item_subscriptions = desubscription_handling(message, self.item_subscriptions, udp_socket, client_address)  
             elif request_type==("NEGOTIATE_RESPONSE"):
                 self.negotiation_response(request_data, client_address)
             elif request_type==("LIST_ITEM"):
                 self.list_item_response(request_data, client_address)
+
             else:
                     reply = f"Invalid UDP communication request type: {request_type} \n"
                     print(reply)

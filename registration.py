@@ -2,7 +2,7 @@ import pickle
 
 ## Server-Side Functions
 
-# This method will allow the server to internally process an incoming reigstration request from a client
+# This method will allow the server to internally process an incoming registration request from a client
 def registration_handling(registration_request, registered_users, server_socket, client_address):
     # Deconstruct the incoming registration request message
     deconstructed_registration_request = registration_request.split(" ")
@@ -83,33 +83,21 @@ def REGISTER_DENIED(server_sock, client_addr, message):
 ## Client-Side Functions
 
 # This method will be used to handle user inputs for client-side registration.
-def registration_input_handling(client_object):
-    # Gather the client's important information to send to the server for registration
-    rq = client_object.registration_rq
-    name = client_object.name
-    role = client_object.role
-    ip_address = client_object.ip_address
-    udp_port = client_object.udp_port
-    tcp_port = client_object.tcp_port
-
+def registration_input_handling(rq, name, role, ip_address, udp_port, tcp_port, client_socket, server_address):
     # Create the message that will be sent to the server for registration
     registration_request = f"REGISTER {rq} {name} {role} {ip_address} {udp_port} {tcp_port}"
 
     # Call the REGISTER method to send the registration request to the server
-    REGISTER(client_object.udp_socket, client_object.server_address, registration_request)
+    REGISTER(client_socket, server_address, registration_request)
 # END registration_input_handling
 
 # This method will be used to handle user inputs for client-side deregistration.
-def deregistration_input_handling(client_object):
-    # Gather the client's important information to send to the server for deregistration
-    rq = client_object.registration_rq
-    name = client_object.name
-
+def deregistration_input_handling(rq, name, client_socket, server_address):
     # Create the message that will be sent to the server for deregistration
     deregistration_request = f"DEREGISTER {rq} {name}"
 
     # Call the DE_REGISTER method to send the deregistration request to the server
-    DE_REGISTER(client_object.udp_socket, client_object.server_address, deregistration_request)
+    DE_REGISTER(client_socket, server_address, deregistration_request)
 # END deregistration_input_handling
 
 # This method will be used by the client to register to the server.
