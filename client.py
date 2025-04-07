@@ -119,51 +119,8 @@ class Client:
 
 
 
-    def list_item():
-     while True:
-        RQ = random.randint(100, 900) 
-        item_name = input("Enter item name (or type 'exit' to quit): ")
-        if item_name.lower() == "exit":
-            break
-
-        item_description = input("Enter item description: ")
-
+   
     
-        start_price = input("Enter start price ($): ")
-        
-        
-   
-        duration = input("Enter duration (minutes): ")
-        type="LIST_ITEM"
-        
-
-        request_data = {
-        "Type": type,
-        "RQ#": RQ,
-        "Item_Name": item_name,
-        "Item_Description": item_description,
-        "Start_Price": start_price,  
-        "Duration": duration,        
-        }
-
-        print("Sending listing request:", request_data)
-        message = pickle.dumps(request_data)
-        self.udp_socket.sendto(message, (self.SERVER_IP, self.SERVER_UDP_PORT))
-
-   
-        response, _ = s.recvfrom(1024)  
-        response_data = pickle.loads(response) 
-        print("Server Response:", response_data)
-
-        if "ITEM_LISTED" in response_data.values():
-         item_listed_response = input("Select [1] to list another item or [2] to wait for negotiations: ")
-         if item_listed_response == "1":
-                continue
-         else:
-                break
-
-        elif "LIST_DENIED" in response_data.values():
-            continue  
 
     # ---- Wait for a possible negotiation request ----
    
@@ -201,7 +158,7 @@ class Client:
 
     def menu_select(self):
      while True:
-            print("What would you like o do?\n")
+            print("What would you like to do?\n")
             print("[0] Exit\n")
             print("[1] Register with the server\n")
             if self.registration_rq is not None:
@@ -220,15 +177,52 @@ class Client:
                 break
 
             elif input_selection=="1":
-                registration_handling(self)
+                registration_input_handling(self)
             elif input_selection=="2" and self.registration_rq is not None:
-                deregistration_handling(self)
+                deregistration_input_handling(self)
             elif input_selection=="3" and self.role=="Seller":
-                client.list_item()
+                 print("In List ITEM!")
+                 while True:
+                    RQ = random.randint(100, 900) 
+                    item_name = input("Enter item name (or type 'exit' to quit): ")
+                    if item_name.lower() == "exit":
+                        break
+
+                    item_description = input("Enter item description: ")
+
+    
+                    start_price = input("Enter start price ($): ")
+        
+        
+   
+                    duration = input("Enter duration (minutes): ")
+                    type="LIST_ITEM"
+        
+
+                    request_data = {
+                    "Type": type,
+                    "RQ#": RQ,
+                    "Item_Name": item_name,
+                    "Item_Description": item_description,
+                    "Start_Price": start_price,  
+                    "Duration": duration,        
+                    }
+
+                    client.startClient()
+
+                    if "ITEM_LISTED" in response_data.values():
+                        item_listed_response = input("Select [1] to list another item or [2] to wait for negotiations: ")
+                    if item_listed_response == "1":
+                            continue
+                    else:
+                            break
+
+            elif "LIST_DENIED" in response_data.values():
+                        continue  
             elif input_selection=="3" and self.role=="Buyer":
-                print("Browse items here")
+                            print("Browse items here")
             elif input_selection=="4" and self.role=="Buyer":
-                print("make offer here")
+                            print("make offer here")
 
     ## TCP Handling
     # TODO: Implement TCP Handling when modules are available
@@ -274,38 +268,40 @@ if __name__ == "__main__":
             while True:
                 role_confirmation = input(f"Are you sure you would like to be a seller? [y/n]").lower()
                 if role_confirmation == "y":
+                    client=Seller(name)
                     break
                 elif role_confirmation == "n":
                     break
                 else:
                     print(f"Invalid selection! \n")
             if role_confirmation == "y":
-                client=Seller(name)
+                
                 break
         elif role == "b":
             while True:
                 role_confirmation = input(f"Are you sure you would like to be a buyer? [y/n]").lower()
                 if role_confirmation == "y":
+                    client=Buyer(name)
                     break
                 elif role_confirmation == "n":
                     break
                 else:
                     print(f"Invalid selection! \n")
             if role_confirmation == "y":
-                client=Buyer(name)
                 break
         else:
             print(f"Invalid role!  You should enter 's' to be a Seller or 'b' to be a Buyer... \n")
     
     # Create the client object
-    if(role == "s"):
-        client = Seller(name)
+    # if(role == "s"):
+    #     client = Seller(name)
       
-    elif(role == "b"):
-        client = Buyer(name)
+    # elif(role == "b"):
+    #     client = Buyer(name)
 
-    client.startClient()
+   
     client.menu_select()
+    
 
 
             
