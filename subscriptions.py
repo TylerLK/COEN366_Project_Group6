@@ -73,7 +73,7 @@ def desubscription_handling(desubscription_request, subscriptions, server_socket
     if client_name in subscriptions[item_name]["subscribed_clients"]:
         desubscription_confirmation_message = f"DE_SUBSCRIBED {rq} \n"
         server_socket.sendto(pickle.dumps(desubscription_confirmation_message), client_address)
-        del subscriptions[item_name]["subscribed_clients"][client_name]
+        subscriptions[item_name]["subscribed_clients"].remove(client_name)
         print(desubscription_confirmation_message)
         return subscriptions
     
