@@ -119,7 +119,7 @@ class Client:
 
 
 
-    def list_item():
+    def list_item(self):
      while True:
         RQ = random.randint(100, 900) 
         item_name = input("Enter item name (or type 'exit' to quit): ")
@@ -220,9 +220,9 @@ class Client:
                 break
 
             elif input_selection=="1":
-                registration_handling(self)
+                registration_input_handling(self)
             elif input_selection=="2" and self.registration_rq is not None:
-                deregistration_handling(self)
+                deregistration_input_handling(self)
             elif input_selection=="3" and self.role=="Seller":
                 client.list_item()
             elif input_selection=="3" and self.role=="Buyer":
