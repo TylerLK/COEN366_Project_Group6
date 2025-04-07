@@ -18,10 +18,9 @@ def notifyActionClosure(itemName, RQ):
     if highestBid is not None:
         buyerName, finalPrice = highestBid
         winnerMsg = f"WINNER {RQ} {itemName} {finalPrice} {listed_items[2]}"
-        selletMsg = f"SOLD {RQ} {itemName} {listed_items[3]}"
+        sellerMsg = f"SOLD {RQ} {itemName} {listed_items[3]}"
         send_tcp_message(buyerName, winnerMsg)
-        send_tcp_message(seller_name, selletMsg)
-
+        send_tcp_message(seller_name, sellerMsg)
     else:
         non_offer_msg = f"NON_OFFER {request_number} {item_name}"
         send_tcp_message(seller_name, non_offer_msg)
