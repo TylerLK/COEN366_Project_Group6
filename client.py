@@ -118,6 +118,7 @@ class Client:
             except Exception as e:
                 print(f"Error: {e}") 
 
+
     def menu_select(self):
      while True:
             print("What would you like to do?\n")
