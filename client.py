@@ -119,6 +119,7 @@ class Client:
 
 
 
+
    
     
 
@@ -177,9 +178,11 @@ class Client:
                 break
 
             elif input_selection=="1":
+
                 registration_input_handling(self)
             elif input_selection=="2" and self.registration_rq is not None:
                 deregistration_input_handling(self)
+
             elif input_selection=="3" and self.role=="Seller":
                  print("In List ITEM!")
                  while True:
