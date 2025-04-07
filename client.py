@@ -6,7 +6,7 @@ import threading
 import random
 s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 # User-Defined Modules
-from registration import registration_handling, deregistration_handling
+from registration import registration_input_handling, deregistration_input_handling
 
 class Client:
     # Attributes
@@ -33,6 +33,7 @@ class Client:
             print(f"UDP Datagram Socket created... \n")
         except socket.error as e:
             print(f"Failed to create a UDP Datagram Socket.  Error: {str(e)} \n")
+            print(f"Failed to create a UDP Datagram Socket.  Error: {str(e)} \n")
             sys.exit()
         # Bind the newly created UDP Datagram Sokcet to an IP Address and Port Number
         try:
@@ -40,10 +41,17 @@ class Client:
             print(f"UDP Datagram Socket binding... \n")
         except socket.error as e:
             print(f"Bind failed.  Error: {str(e)} \n")
+            print(f"Bind failed.  Error: {str(e)} \n")
             sys.exit()
         # Set the client's UDP port number
         self.udp_port = self.udp_socket.getsockname()[1]
         print(f"UDP Datagram Socket binding complete.  Bound at {self.ip_address}:{self.udp_port} \n")
+        # Start a thread to send UDP messages to the server
+        udp_sender_thread = threading.Thread(target=self.udpMessageSender, args=())
+        udp_sender_thread.start()
+        # Start a thread to receive UDP messages from the server
+        udp_receiver_thread = threading.Thread(target=self.udpMessageReceiver, args=())
+        udp_receiver_thread.start()
         # Start a thread to send UDP messages to the server
         udp_sender_thread = threading.Thread(target=self.udpMessageSender, args=())
         udp_sender_thread.start()
@@ -56,12 +64,14 @@ class Client:
             self.tcp_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         except socket.error as e:
             print(f"Failed to create a TCP Socket. Error: {str(e)} \n")
+            print(f"Failed to create a TCP Socket. Error: {str(e)} \n")
             sys.exit()
         # Bind the newly created TCP Socket to an IP Address and Port Number
         try:
             self.tcp_socket.bind((self.ip_address, 0)) # Putting 0 means that an avilable port will be found
             print(f"TCP Socket binding... \n")
         except socket.error as e:
+            print(f"Bind failed.  Error: {str(e)} \n")
             print(f"Bind failed.  Error: {str(e)} \n")
             sys.exit()
         self.tcp_port = self.tcp_socket.getsockname()[1]
@@ -229,6 +239,7 @@ class Client:
 class Seller (Client):
     def __init__(self, name):
         super().__init__(name, "Seller")
+# END Seller Class
 # END Seller Class
 
 # This class will define behaviour specific to buyer clients
