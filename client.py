@@ -220,9 +220,9 @@ class Client:
                 break
 
             elif input_selection=="1":
-                registration_input_handling(self)
+                registration_input_handling(self.registration_rq, self.name, self.role, self.ip_address, self.udp_port, self.tcp_port, self.udp_socket, (self.SERVER_IP, self.SERVER_UDP_PORT))
             elif input_selection=="2" and self.registration_rq is not None:
-                deregistration_input_handling(self)
+                deregistration_input_handling(self.registration_rq, self.name, self.udp_socket, (self.SERVER_IP, self.SERVER_UDP_PORT))
             elif input_selection=="3" and self.role=="Seller":
                 client.list_item()
             elif input_selection=="3" and self.role=="Buyer":
