@@ -1,65 +1,128 @@
 import pickle
-import socket
 
-# Server-side Functions
-def SUBSCRIBED(sock, address, rq):
-    response = {
-        "status": "SUBSCRIBED",
-        "rq": rq
-    }
-    serialized_response = pickle.dumps(response)
-    sock.sendto(serialized_response, address)
-    print(f"SUBSCRIBED sent to {address} for RQ#: {rq}")
+## Server-Side Functions
 
-def SUBSCRIBE_DENIED(sock ,address, rq, reason):
-    response = {
-        "status": "SUBSCRIBE_DENIED",
-        "rq": rq,
-        "reason": reason
-    }
-    serialized_response = pickle.dumps(response)
-    sock.sendto(serialized_response, address)
-    print(f"SUBSCRIBE_DENIED sent to {address} for RQ#: {rq}. Reason: {reason}")
+# This method will allow the server to internally process an incoming subscription request from a client
+def subscription_handling(subscription_request, subscriptions, server_socket, client_address):
+    # Deconstruct the incoming subscription request message
+    deconstructed_subscription_request = subscription_request.split(" ")
 
-# Client-side Functions
-def SUBSCRIBE(rq, item):
-    message = {
-        "type": "SUBSCRIBE",
-        "rq": rq,
-        "item_name": item,
-        
-    }
-    # Serialize the message using pickle
-    serialized_message = pickle.dumps(message)
-    return serialized_message
-
-def DE_SUBSCRIBE():
-    message = {
-        "type": "DE_SUBSCRIBE",
-    }
-    serialized_message = pickle.dumps(message)
-    return serialized_message
-# handle_subscribe function to implement for the server side in server.py
-
-subscriptions = {} # from item name contain list of users subscribed 
-def handle_subscribe(sock, address, data):
-    rq = data.get("rq")
-    item_name = data.get("item_name")
-    client_name = data.get("client_name") 
-
-    # Validate the input data
-    if not rq or not item_name or not client_name:
-        SUBSCRIBE_DENIED(sock, address, rq, "Missing required fields (rq, item_name, or client_name)")
-        return
-
-    # Check if the item already exists in the subscriptions dictionary
-    if item_name not in subscriptions:
-        subscriptions[item_name] = []  # Initialize an empty list for this item
-
-    # Check if the client is already subscribed
-    if client_name not in subscriptions[item_name]:
-        subscriptions[item_name].append(client_name)  # Add the client's name to the list
-        SUBSCRIBED(sock, address, rq)  # Send a success response
+    # Check if the subscription request contains the correct information (i.e., 4 segments of information)
+    if len(deconstructed_subscription_request) != 4:
+        # Call the SUBSCRIPTION_DENIED method to tell the client their subscription request was invalid.
+        subscription_denial_message = f"SUBSCRIPTION_DENIED {deconstructed_subscription_request[1]}: Invalid number of subscription parameters. {len(deconstructed_subscription_request)} sent, 4 expected... \n"       
+        SUBSCRIPTION_DENIED(server_socket, client_address, subscription_denial_message)
+        print(subscription_denial_message)
+        return subscriptions
+    
     else:
-        # If the client is already subscribed, deny the subscription
-        SUBSCRIBE_DENIED(sock, address, rq, "Client is already subscribed to this item")
+        # Create a variable for each piece of the subscription request
+        message_type, rq, item_name, client_name = deconstructed_subscription_request
+    
+    # Check if the item is actually in the dictionary of subscriptions
+    if item_name not in subscriptions:
+        # Create a new key-value pair for this item in the dictionary of subscriptions
+        subscriptions[item_name] = {
+            "rq": rq,
+            "subscribed_clients": []
+        }
+
+    # Check if the user already exists in the dictionary of pre-existing subscriptions
+    if client_name in subscriptions[item_name]:
+        # Call the SUBSCRIPTION_DENIED method to tell the client their subscriptionn request was invalid.
+        subscription_denial_message = f"SUBSCRIPTION_DENIED {rq}: You have already subscribed to this item. \n"
+        SUBSCRIPTION_DENIED(server_socket, client_address, subscription_denial_message)
+        print(subscription_denial_message)
+        return subscriptions
+    
+    else:
+        # Add the user to the dictionary of subscriptions
+        subscriptions[item_name]["subscribed_clients"].append(client_name)
+
+        # Call the SUBSCRIBED method to acknowledge the client's subscription request
+        subscription_confirmation_message = f"SUBSCRIBED {rq} \n"
+        SUBSCRIBED(server_socket, client_address, subscription_confirmation_message)
+        print(subscription_confirmation_message)
+        return subscriptions
+# END subscription_handling
+
+# This method will allow the server to internally process an incoming desubscription request from a client
+def desubscription_handling(desubscription_request, subscriptions, server_socket, client_address):
+    # Deconstruct the incoming desubscription request message
+    deconstructed_desubscription_request = desubscription_request.split(" ")
+
+    # Check if the registration request contains the correct information (i.e., 3 segments of information)
+    if len(deconstructed_desubscription_request) != 4:
+        desubscription_denial_message = f"DE_SUBSCRIBE_DENIED {deconstructed_desubscription_request[1]}: Invalid number of desubscription parameters. {len(deconstructed_desubscription_request)} sent, 4 expected... \n"
+        server_socket.sendto(pickle.dumps(desubscription_denial_message), client_address)
+        print(desubscription_denial_message)
+        return subscriptions
+    
+    else:
+        # Create a variable for each piece of the subscription request
+        message_type, rq, item_name, client_name = deconstructed_desubscription_request
+    
+    # Check if the item is actually in the dictionary of subscriptions
+    if item_name not in subscriptions:
+        desubscription_denial_message = f"DE_SUBSCRIBE_DENIED {rq}: Item does not exist. \n"
+        server_socket.sendto(pickle.dumps(desubscription_denial_message), client_address)
+        print(desubscription_denial_message)
+        return subscriptions
+    
+    # Delete the user from the dictionary of subscriptions, provided that the user exists
+    if client_name in subscriptions[item_name]["subscribed_clients"]:
+        desubscription_confirmation_message = f"DE_SUBSCRIBED {rq} \n"
+        server_socket.sendto(pickle.dumps(desubscription_confirmation_message), client_address)
+        del subscriptions[item_name]["subscribed_clients"][client_name]
+        print(desubscription_confirmation_message)
+        return subscriptions
+    
+    else:
+        desubscription_denial_message = f"DE_SUBSCRIBE_DENIED {rq}: Client name does not exist. \n"
+        server_socket.sendto(pickle.dumps(desubscription_denial_message), client_address)       
+        print(desubscription_denial_message)
+        return subscriptions
+# END desubscription_handling
+
+# This method will be used as a positive acknowledgement for a potential client's subscription request.
+def SUBSCRIBED(server_sock, client_addr, message):
+    print(f"Sending subscription confirmation to client at {client_addr[0]}:{str(client_addr[1])}... \n")
+    server_sock.sendto(pickle.dumps(message), client_addr)
+# END SUBSCRIBED
+
+def SUBSCRIPTION_DENIED(server_sock, client_addr, message):
+    print(f"Sending subscription denial to client at {client_addr[0]}:{str(client_addr[1])}... \n")
+    server_sock.sendto(pickle.dumps(message), client_addr)
+# END SUBSCRIPTION_DENIED
+
+## Client-Side Functions
+
+# This method will be used to handle user inputs for client-side subscription.
+def subscription_input_handling(rq, item_name, name, client_socket, server_address):
+    # Create the message that will be sent to the server for subscription
+    subscription_request = f"SUBSCRIBE {rq} {item_name} {name}"
+
+    # Call the SUBSCRIBE method to send the subscription request to the server
+    SUBSCRIBE(client_socket, server_address, subscription_request)
+# END subscription_input_handling
+
+# This method will be used to handle user inputs for client-side desubscription.
+def desubscription_input_handling(rq, item_name, name, client_socket, server_address):
+    # Create the message that will be sent to the server for desubscription
+    desubscription_request = f"DESUBSCRIBE {rq} {item_name} {name}"
+
+    # Call the DE_SUBSCRIBE method to send the desubscription request to the server
+    DE_SUBSCRIBE(client_socket, server_address, desubscription_request)
+# END desubscription_input_handling
+
+# This method will be used by the client to subscribe to the server.
+def SUBSCRIBE(client_sock, server_addr, message):
+    print(f"Sending subscription request to the server at {server_addr[0]}:{str(server_addr[1])}... \n")
+    client_sock.sendto(pickle.dumps(message), server_addr)
+# END SUBSCRIBE
+
+# This method will be used by the client to desubscribe from the server.
+def DE_SUBSCRIBE(client_sock, server_addr, message):
+    print(f"Sending desubscription request to the server at {server_addr[0]}:{str(server_addr[1])}... \n")
+    client_sock.sendto(pickle.dumps(message), server_addr)
+# END DE_SUBSCRIBE
