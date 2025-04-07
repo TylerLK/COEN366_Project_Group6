@@ -1,26 +1,29 @@
 import socket
-
 from auction_update_server import listed_items, client_bids
-from server import registered_clients # Why it's not working???
-
 
 def getHighestBid(itemName):
-    # Retrieve the highest bid from the dictionary as well as all the info
-    if itemName in listed_items and client_bids[itemName]:
-        highestBid = max(client_bids[itemName], key = client_bids[1])
-        return highestBid
-    return None # if no bids were placed
+    if itemName in listed_items and client_bids.get(itemName):
+        return max(client_bids[itemName].items(), key=lambda x: x[1])
+    return None
 
 
-def notifyActionClosure(itemName, RQ):
-    highestBid = getHihestBid(itemName)
-
-    if highestBid is not None:
+def notifyWinner(buyerName, itemName, RQ):
+    highestBid = getHighestBid(itemName)
+    if highestBid:
         buyerName, finalPrice = highestBid
-        winnerMsg = f"WINNER {RQ} {itemName} {finalPrice} {listed_items[2]}"
-        sellerMsg = f"SOLD {RQ} {itemName} {listed_items[3]}"
-        send_tcp_message(buyerName, winnerMsg)
-        send_tcp_message(seller_name, sellerMsg)
+        seller_name = listed_items[itemName]["seller"]
+        winnerMsg = f"WINNER {RQ} {itemName} {finalPrice} {seller_name}"
+        return winnerMsg
+
+
+def notifySeller(sellerName, itemName, RQ):
+    highestBid = getHighestBid(itemName)
+    seller_name = listed_items[itemName]["seller"]
+
+    if highestBid:
+        buyerName, finalPrice = highestBid
+        sellerMsg = f"SOLD {RQ} {itemName} {finalPrice} {buyerName}"
+        return sellerMsg
     else:
-        non_offer_msg = f"NON_OFFER {request_number} {item_name}"
-        send_tcp_message(seller_name, non_offer_msg)
+        non_offer_msg = f"NON_OFFER {RQ} {itemName}"
+        return non_offer_msg
