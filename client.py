@@ -4,6 +4,7 @@ import sys
 import pickle
 import threading
 import random
+import time
 s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 # User-Defined Modules
 from registration import registration_input_handling, deregistration_input_handling
@@ -184,7 +185,7 @@ class Client:
                 deregistration_input_handling(self)
 
             elif input_selection=="3" and self.role=="Seller":
-                 print("In List ITEM!")
+                
                  while True:
                     RQ = random.randint(100, 900) 
                     item_name = input("Enter item name (or type 'exit' to quit): ")
@@ -213,20 +214,18 @@ class Client:
 
                     client.startClient()
 
-                    if "ITEM_LISTED" in response_data.values():
-                        item_listed_response = input("Select [1] to list another item or [2] to wait for negotiations: ")
-                    if item_listed_response == "1":
-                            continue
-                    else:
-                            break
-
-            elif "LIST_DENIED" in response_data.values():
-                        continue  
+                    print("Sending listing request:", request_data)
+                    message = pickle.dumps(request_data)
+                    self.udp_socket.sendto(message, (self.SERVER_IP, self.SERVER_UDP_PORT))
+                    
+                    
+            
             elif input_selection=="3" and self.role=="Buyer":
                             print("Browse items here")
             elif input_selection=="4" and self.role=="Buyer":
                             print("make offer here")
-
+            
+           
     ## TCP Handling
     # TODO: Implement TCP Handling when modules are available
 # END Client Class
