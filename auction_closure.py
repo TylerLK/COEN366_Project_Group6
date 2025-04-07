@@ -4,7 +4,7 @@ from auction_update_server import listed_items, client_bids
 from server import registered_clients # Why it's not working???
 
 
-def getHihestBid(itemName):
+def getHighestBid(itemName):
     # Retrieve the highest bid from the dictionary as well as all the info
     if itemName in listed_items and client_bids[itemName]:
         highestBid = max(client_bids[itemName], key = client_bids[1])
