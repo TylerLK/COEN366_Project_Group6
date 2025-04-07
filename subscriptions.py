@@ -27,9 +27,9 @@ def subscription_handling(subscription_request, subscriptions, server_socket, cl
             "subscribed_clients": []
         }
 
-    # Check if the user already exists in the dictionary of pre-existing subscriptions
-    if client_name in subscriptions[item_name]:
-        # Call the SUBSCRIPTION_DENIED method to tell the client their subscriptionn request was invalid.
+    # Check if the user already exists in the list of subscribed clients
+    if client_name in subscriptions[item_name]['subscribed_clients']:
+        # Call the SUBSCRIPTION_DENIED method to tell the client their subscription request was invalid.
         subscription_denial_message = f"SUBSCRIPTION_DENIED {rq}: You have already subscribed to this item. \n"
         SUBSCRIPTION_DENIED(server_socket, client_address, subscription_denial_message)
         print(subscription_denial_message)
