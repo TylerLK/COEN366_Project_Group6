@@ -51,7 +51,7 @@ def desubscription_handling(desubscription_request, subscriptions, server_socket
     # Deconstruct the incoming desubscription request message
     deconstructed_desubscription_request = desubscription_request.split(" ")
 
-    # Check if the registration request contains the correct information (i.e., 3 segments of information)
+    # Check if the desubscription request contains the correct information (i.e., 4 segments of information)
     if len(deconstructed_desubscription_request) != 4:
         desubscription_denial_message = f"DE_SUBSCRIBE_DENIED {deconstructed_desubscription_request[1]}: Invalid number of desubscription parameters. {len(deconstructed_desubscription_request)} sent, 4 expected... \n"
         server_socket.sendto(pickle.dumps(desubscription_denial_message), client_address)
