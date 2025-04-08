@@ -107,7 +107,7 @@ def bid_input_handling(rq, item_name, bid_amount, client_name, client_socket, se
     # Create the message that will be sent to the server for deregistration
     bid_request = f"BID {rq} {item_name} {bid_amount} {client_name}"
 
-    # Call the DE_REGISTER method to send the deregistration request to the server
+    # Call the BID method to send the bid request to the server
     BID(client_socket, server_address, bid_request)
 # END deregistration_input_handling
 
