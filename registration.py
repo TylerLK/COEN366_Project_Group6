@@ -9,7 +9,7 @@ def registration_handling(global_rq, registration_request, registered_users, ser
     deconstructed_registration_request = registration_request.split(" ")
 
     # Update the global "rq" variable if the client's incoming rq value is null
-    if deconstructed_registration_request[1] == None:
+    if deconstructed_registration_request[1] is None:
         deconstructed_registration_request[1] = global_rq
         global_rq += 1
 
@@ -53,7 +53,7 @@ def deregistration_handling(global_rq, deregistration_request, registered_users,
     deconstructed_deregistration_request = deregistration_request.split(" ")
 
     # Update the global "rq" variable if the client's incoming rq value is null
-    if deconstructed_deregistration_request[1] == None:
+    if deconstructed_deregistration_request[1] is None:
         deconstructed_deregistration_request[1] = global_rq
         global_rq += 1
 
