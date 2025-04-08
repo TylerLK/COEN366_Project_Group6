@@ -94,6 +94,60 @@ class Server:
         self.UDP_SOCKET = None
         self.TCP_SOCKET = None
 
+    def monitor_auctions(self, addr):
+
+     while True:
+        time.sleep(5)
+        current_time = time.time()
+
+        for item in self.listed_items:
+            elapsed_time = current_time - item["Start_Time"]
+            half_duration = (item["Duration"] * 60) / 2
+
+            if elapsed_time > half_duration and item["Item_Name"] not in self.client_bids and not item["Prev_Negotiated"]:
+                item["Prev_Negotiated"] = True
+                print(f"Sending negotiation request for {item['Item_Name']}")
+                response = {
+                    "Server Response": "NEGOTIATE_REQ",
+                    "Item_Name": item["Item_Name"],
+                    "Current Price": item["Start_Price"],
+                    "Time_Left": (item["Duration"] * 60) - elapsed_time
+                }
+                self.UDP_SOCKET.sendto(pickle.dumps(response), item["Client_Addr"])
+
+        threading.Thread(target=self.monitor_auctions, daemon=True).start()
+
+    def negotiation_response(self, request_data, addr):
+   
+     try:
+        current_time = time.time()
+        item_name = request_data.get("Item_Name")
+        new_price = int(request_data.get("New Price"))
+        request_id = request_data.get("RQ#")
+
+        for item in self.listed_items:
+            if item["Item_Name"] == item_name:
+                item["Start_Price"] = new_price
+                elapsed_time = current_time - item["Start_Time"]
+                break
+        else:
+            print(f"Item not found: {item_name}")
+            return
+
+        print(f"Updated {item_name} price to {new_price}.")
+
+        response = {
+            "Server Response": "PRICE_ADJUSTMENT",
+            "RQ#": request_id,
+            "Item_Name": item_name,
+            "New_Price": new_price,
+            "Time Left": elapsed_time
+        }
+        self.UDP_SOCKET.sendto(pickle.dumps(response), addr)
+
+     except Exception as e:
+        print(f"Error processing negotiation: {e}")
+
     def list_item_response(self, request_data, addr):
    
      try:
