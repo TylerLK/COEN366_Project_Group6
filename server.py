@@ -241,17 +241,17 @@ class Server:
             # Determine the type of message that needs to be handled, and apply the appropriate method.
 
 
-            if message.startswith("REGISTER"):
-                self.registered_clients = registration_handling(message, self.registered_clients, udp_socket, client_address)
-            elif message.startswith("DEREGISTER"):
-                self.registered_clients = deregistration_handling(message, self.registered_clients, udp_socket, client_address)
-            elif message.startswith("SUBSCRIBE"):
-                self.item_subscriptions = subscription_handling(message, self.item_subscriptions, udp_socket, client_address)
-            elif message.startswith("DESUBSCRIBE"):
-                self.item_subscriptions = desubscription_handling(message, self.item_subscriptions, udp_socket, client_address)  
-            elif message==("NEGOTIATE_RESPONSE"):
+            if request_type == ("REGISTER"):
+                self.registered_clients = registration_handling(request_data, self.registered_clients, udp_socket, client_address)
+            elif request_type == ("DEREGISTER"):
+                self.registered_clients = deregistration_handling(request_data, self.registered_clients, udp_socket, client_address)
+            elif request_type == ("SUBSCRIBE"):
+                self.item_subscriptions = subscription_handling(request_data, self.item_subscriptions, udp_socket, client_address)
+            elif request_type == ("DESUBSCRIBE"):
+                self.item_subscriptions = desubscription_handling(request_data, self.item_subscriptions, udp_socket, client_address)  
+            elif request_type == ("NEGOTIATE_RESPONSE"):
                 self.negotiation_response(request_data, client_address)
-            elif message==("LIST_ITEM"):
+            elif request_type == ("LIST_ITEM"):
                 self.list_item_response(request_data, client_address)
 
             else:

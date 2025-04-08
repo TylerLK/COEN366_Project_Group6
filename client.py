@@ -204,18 +204,18 @@ class Client:
                     message = pickle.dumps(request_data)
                     self.udp_socket.sendto(message, (self.SERVER_IP, self.SERVER_UDP_PORT))
                     
-                    #data = self.udpMessageReceiver()
-                   
-                    # # Attempt to deserialize the message sent by a client.
-                    # response = pickle.loads(data)
-                    # #print("\nNegotiation request received:", response)
-                    # negotiation_choice = input("Enter [1] to Accept or [2] to Reject: ")
-                    # if negotiation_choice == "1":
-                    #             negotiation_label = "ACCEPT"
-                    #             new_price = input("Enter new price: ")
-                    # else:
-                    #             negotiation_label = "REFUSE"
-                    #             new_price = "REJECT"
+                    data = self.udpMessageReceiver()
+                
+                    # Attempt to deserialize the message sent by a client.
+                    response = pickle.loads(data)
+                    print("\nNegotiation request received:", response)
+                    negotiation_choice = input("Enter [1] to Accept or [2] to Reject: ")
+                    if negotiation_choice == "1":
+                                negotiation_label = "ACCEPT"
+                                new_price = input("Enter new price: ")
+                    else:
+                                negotiation_label = "REFUSE"
+                                new_price = "REJECT"
 
                     #             item_name = response["Item_Name"]
                     #             rq = response.get("RQ#", random.randint(100, 900))
@@ -236,8 +236,12 @@ class Client:
             elif input_selection=="4" and self.role=="Buyer":
                             print("make offer here")
             elif input_selection=="4" and self.role=="Seller":
+                 
+                data = self.udpMessageReceiver()
                 
-                #print("\nNegotiation request received:", message)
+                    # Attempt to deserialize the message sent by a client.
+                response = pickle.loads(data)
+                print("\nNegotiation request received:", response)
                 negotiation_choice = input("Enter [1] to Accept or [2] to Reject: ")
                 
                 if negotiation_choice == "1":

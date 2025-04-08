@@ -1,39 +1,38 @@
 import pickle
 
-# Server-side Functions
-def AUCTION_ANNOUNCE(sock, subscriptions, auction_data, address): #including address?
-    """
-    Sends auction announcements to subscribed buyers for their selected items.
+# Server-Side Functions
 
-    Args:
-        sock (socket.socket): The server's socket.
-        subscriptions (dict): A dictionary mapping item names to lists of subscribed client names.
-        auction_data (list): A list of dictionaries containing auction details.
-    """
-    for auction in auction_data:
-        rq = auction.get("rq")  # Request number for the auction
-        item_name = auction.get("item_name")
-        item_description = auction.get("item_description")
-        current_price = auction.get("current_price", auction.get("start_price"))
-        time_left = auction.get("duration")
+# This method will be used to send auction announcements for all items that are up for auction.
+def AUCTION_ANNOUNCE(auction_item, active_auctions, subscription_list, registered_users, server_socket, client_address):
+    # Check if the current item is still actively being auctioned.
+    if auction_item in active_auctions:
+        # Get the specific item name that is up for auction.
+        item_name = auction_item
 
-        # Check if there are subscribers for this item
-        if item_name in subscriptions:
-            for client_name in subscriptions[item_name]:
-                # Construct the announcement message
-                message = {
-                    "type": "AUCTION_ANNOUNCE",
-                    "rq": rq,
-                    "item_name": item_name,
-                    "item_description": item_description,
-                    "current_price": current_price,
-                    "time_left": time_left
-                }
+        # Get specific item details for the auction announcement
+        rq = active_auctions[item_name].get("rq")
+        item_description = active_auctions[item_name].get("item_description")
+        current_price = active_auctions[item_name].get("current_price")
+        time_left = active_auctions[item_name].get("duration")
 
-                # Serialize and send the message
-                serialized_message = pickle.dumps(message)
+        # Create the auction announcement message
+        message = f"AUCTION_ANNOUNCE {rq} {item_name} {item_description} {current_price} {time_left}"
+
+        # Send all the auction announcement to all subscribed clients
+        if item_name in subscription_list:
+            for client in subscription_list[item_name]:
+                # Check if the client is in registered_users
+                if client in registered_users:
+                    # Get the client's address
+                    client_address = registered_users[client].get("address")
+                    # Send the message to the client
+                    server_socket.sendto(message.encode(), client_address)
+                    print(f"AUCTION_ANNOUNCE sent to {client} ({client_address}) for item: {item_name}")
                 
-                #client_address = registered_clients[client_name].get("address") #using format from server.py/ not necessary if passing address
-                if address:
-                    sock.sendto(serialized_message, address)
-                    print(f"AUCTION_ANNOUNCE sent to {client_name} ({address}) for item: {item_name}")
+                else:
+                    print(f"Client {client} not found in registered users. Skipping...")
+        
+        else:
+            print(f"No clients subscribed to {item_name}. No announcement sent.")
+        
+# END AUCTION_ANNOUNCE
