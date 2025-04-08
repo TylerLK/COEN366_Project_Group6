@@ -1,41 +1,24 @@
 import pickle
-import socket
 
-# Server-side Functions
-def BID_ACCEPTED(sock, address, rq):
-    response = {
-        "status": "BID_ACCEPTED",
-        "rq": rq
-    }
-    serialized_response = pickle.dumps(response)
-    sock.sendto(serialized_response, address)
-    print(f"BID_ACCEPTED sent to {address} for RQ#: {rq}")
+## Server-Side Functions
 
-def BID_DENIED(sock, address, rq, reason):
-    response = {
-        "status": "BID_REJECTED",
-        "rq": rq,
-        "reason": reason
-    }
-    serialized_response = pickle.dumps(response)
-    sock.sendto(serialized_response, address)
-    print(f"BID_REJECTED sent to {address} for RQ#: {rq}. Reason: {reason}")
+# This method will allow the server to internally process an incoming registration request from a client
+def bid_handling(bid_request, bids, active_auctions, item_list, server_socket, client_address):
+    # Deconstruct the incoming bid request message
+    deconstructed_bid_request = bid_request.split(" ")
 
-# Client-side Functions
-def BID(rq, item, bid_amount):
-    # Construct the BID message as a dictionary
-    message = {
-        "type": "BID",
-        "rq": rq,
-        "item_name": item,
-        "bid_amount": bid_amount
-    }
+    # Check if the bid request contains the correct information (i.e., 5 segments of information)
+    if len(deconstructed_bid_request) != 5:
+        # Call the BID_REJECTED method to tell the client their registration request was invalid.
+        bid_rejection_message = f"BID_RJECTED {deconstructed_bid_request[1]}: Invalid number of bid parameters. {len(deconstructed_bid_request)} sent, 5 expected... \n"       
+        BID_REJECTED(server_socket, client_address, bid_rejection_message)
+        print(bid_rejection_message)
+        return bids
+    
+    else:
+        # Create a variable for each piece of the bid request
+        message_type, rq, item_name, bid_amount, client_name = deconstructed_bid_request
 
-<<<<<<< HEAD
-    # Serialize the message using pickle
-    serialized_message = pickle.dumps(message)
-    return serialized_message
-=======
     # Check if the potential bid is higher than the current bid price of the item
     if item_name not in active_auctions:
         # The item in question is not currently up for auction
@@ -51,63 +34,85 @@ def BID(rq, item, bid_amount):
             BID_REJECTED(server_socket, client_address, bid_rejection_message)
             print(bid_rejection_message)
             return bids
->>>>>>> bc0b6c0 (Bids commit)
 
-'''
-handle_bid function to implement for the server side in server.py'
-'''
-def handle_bid(sock, addr, message):
-    rq = message.get("rq")
-    item_name = message.get("item_name")
-    bid_amount = message.get("bid_amount")
+    # Check if the item already exists in the dictionary of pre-existing bids
+    if item_name not in bids:
+        if item_name in active_auctions: # Item is up for auction
+            # Check the starting price of the item, since there are no current bids for this item
+            starting_price = item_list[item_name]["start_price"]
 
-    # Check if the auction exists and is active
-    if item_name not in listed_items or item_name("rq") != rq:
-        BID_DENIED(sock, addr, rq, "No active auction for the requested item.")
-        return
+            # Check if the bid amount is valid
+            if float(bid_amount) <= starting_price:
+                bid_rejection_message = f"BID_REJECTED {rq}: The bid for {item_name} must be greater than the starting price (i.e., {starting_price})... \n"
+                BID_REJECTED(server_socket, client_address, bid_rejection_message)
+                print(bid_rejection_message)
+                return bids
 
-    # Check if the bid amount is valid
-    current_price = listed_items[item_name]["current_price"]
-    if bid_amount <= current_price:
-        BID_DENIED(sock, addr, rq, "Bid amount is too low.")
-        return
+            else:
+                # Create a new key-value pair for this item in the dictionary of bids
+                bids[item_name] = {
+                    client_name : bid_amount
+                }
 
-    # Accept the bid
-    listed_items[item_name]["current_price"] = bid_amount
-    BID_ACCEPTED(sock, addr, rq)
-
-def send_bid(sock, server_address, rq, item, bid_amount):
-    """
-    Sends a bid request to the server and handles the response.
-
-    Args:
-        sock (socket.socket): The client's socket.
-        server_address (tuple): The server's address (IP and port).
-        rq (str): Request number.
-        item (str): Name of the item being bid on.
-        bid_amount (float): The amount being bid.
-    """
-    try:
-        # Construct the bid request
-        serialized_message = BID(rq, item, bid_amount)
-
-        # Send the bid request to the server
-        sock.sendto(serialized_message, server_address)
-        print(f"Sent BID request for item '{item}' with amount {bid_amount} to {server_address}")
-
-        # Wait for the server's response
-        data, _ = sock.recvfrom(1024)  # Buffer size: 1024 bytes
-
-        # Deserialize the server's response
-        response = pickle.loads(data)
-
-        # Handle the server's response
-        if response.get("status") == "BID_ACCEPTED":
-            print(f"BID ACCEPTED for RQ#: {response.get('rq')}")
-        elif response.get("status") == "BID_REJECTED":
-            print(f"BID REJECTED for RQ#: {response.get('rq')}. Reason: {response.get('reason')}")
+                # Call the REGISTERED method to acknowledge the client's registration request
+                bid_acceptance_message = f"BID_ACCEPTED {rq} \n"
+                BID_ACCEPTED(server_socket, client_address, bid_acceptance_message)
+                print(bid_acceptance_message)
+                return bids
         else:
-            print("Invalid response from server")
+            # The item in question is not currently up for auction
+            bid_rejection_message = f"BID_REJECTED {rq}: The '{item_name}' item is not currently up for auction... \n"
+            BID_REJECTED(server_socket, client_address, bid_rejection_message)
+            print(bid_rejection_message)
+            return bids
 
-    except Exception as e:
-        print(f"Error during bid: {e}")
+    # Check if the user has already made a bid for this item
+    if client_name in bids[item_name]:
+        # Update the client's bid on this item
+        bids[item_name][client_name] = bid_amount
+
+        # Call the REGISTERED method to acknowledge the client's registration request
+        bid_acceptance_message = f"BID_ACCEPTED {rq} \n"
+        BID_ACCEPTED(server_socket, client_address, bid_acceptance_message)
+        print(bid_acceptance_message)
+        return bids
+    
+    else:
+        # Add the user to the dictionary of registered users
+        bids[item_name][client_name] = bid_amount
+
+        # Call the REGISTERED method to acknowledge the client's registration request
+        bid_acceptance_message = f"BID_ACCEPTED {rq} \n"
+        BID_ACCEPTED(server_socket, client_address, bid_acceptance_message)
+        print(bid_acceptance_message)
+        return bids
+# END bid_handling
+
+# This method will be used as a positive acknowledgement for a client's bid request.
+def BID_ACCEPTED(server_sock, client_addr, message):
+    print(f"Sending bid acceptance to client at {client_addr[0]}:{str(client_addr[1])}... \n")
+    server_sock.sendto(pickle.dumps(message), client_addr)
+# END BID_ACCEPTED
+
+# This method will be used as a negative acknowledgement for a client's bid request.
+def BID_REJECTED(server_sock, client_addr, message):
+    print(f"Sending bid rejection to client at {client_addr[0]}:{str(client_addr[1])}... \n")
+    server_sock.sendto(pickle.dumps(message), client_addr)
+# END BID_REJECTED
+
+## Client-Side Functions
+
+# This method will be used to handle user inputs for client-side deregistration.
+def bid_input_handling(rq, item_name, bid_amount, client_name, client_socket, server_address):
+    # Create the message that will be sent to the server for deregistration
+    bid_request = f"BID {rq} {item_name} {bid_amount} {client_name}"
+
+    # Call the DE_REGISTER method to send the deregistration request to the server
+    BID(client_socket, server_address, bid_request)
+# END deregistration_input_handling
+
+# This method will be used by the client to register to the server.
+def BID(client_sock, server_addr, message):
+    print(f"Sending bid request to the server at {server_addr[0]}:{str(server_addr[1])}... \n")
+    client_sock.sendto(pickle.dumps(message), server_addr)
+# END BID
