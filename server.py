@@ -25,10 +25,115 @@ class Server:
         self.TCP_PORT = 6000
         self.UDP_SOCKET = None
         self.TCP_SOCKET = None
+        
         self.pool = ThreadPoolExecutor(max_workers=10)
+
+
+    def monitor_auctions(self):
+     while True:
+        time.sleep(5)
+        current_time = time.time()
+
+        for item_name, item in list(self.listed_items.items()):
+            elapsed_time = current_time - item["Start_Time"]
+            half_duration = (item["Duration"] * 60) / 2
+
+            if elapsed_time > half_duration and item_name not in self.client_bids and not item["Prev_Negotiated"]:
+                item["Prev_Negotiated"] = True
+                print(f"Sending negotiation request for {item['Item_Name']}")
+                response = {
+                    "Type": "NEGOTIATE_REQ",
+                    "Item_Name": item["Item_Name"],
+                    "Current_Price": item["Start_Price"],
+                    "Time_Left": (item["Duration"] * 60) - elapsed_time
+                }
+                self.UDP_SOCKET.sendto(pickle.dumps(response), item["Client_Addr"])
+
+    def negotiation_response(self, request_data, addr):
+   
+     try:
+        current_time = time.time()
+        item_name = request_data.get("Item_Name")
+        new_price = int(request_data.get("New Price"))
+        request_id = request_data.get("RQ#")
+
+        for item in self.listed_items:
+            if item["Item_Name"] == item_name:
+                item["Start_Price"] = new_price
+                elapsed_time = current_time - item["Start_Time"]
+                break
+        else:
+            print(f"Item not found: {item_name}")
+            return
+
+        print(f"Updated {item_name} price to {new_price}.")
+
+        response = {
+            "Server Response": "PRICE_ADJUSTMENT",
+            "RQ#": request_id,
+            "Item_Name": item_name,
+            "New_Price": new_price,
+            "Time Left": elapsed_time
+        }
+        self.UDP_SOCKET.sendto(pickle.dumps(response), addr)
+
+     except Exception as e:
+        print(f"Error processing negotiation: {e}")
+
+    def list_item_response(self, request_data, addr):
+   
+     try:
+        request_id = request_data.get("RQ#")
+        item_name = request_data.get("Item_Name")
+        item_description = request_data.get("Item_Description")
+        start_price = request_data.get("Start_Price")
+        duration = request_data.get("Duration")
+
+        
+
+        if not str(start_price).isdigit():
+            response = {"Server Response": "LIST_DENIED", "RQ#": request_id, "Reason": "Invalid start price."}
+            self.UDP_SOCKET.sendto(pickle.dumps(response), addr)
+            return
+
+        if not str(duration).isdigit():
+            response = {"Server Response": "LIST_DENIED", "RQ#": request_id, "Reason": "Invalid duration."}
+            self.UDP_SOCKET.sendto(pickle.dumps(response), addr)
+            return
+
+        if len(self.listed_items) >= 100:
+            response = {"Server Response": "LIST_DENIED", "RQ#": request_id, "Reason": "Auction capacity reached"}
+            self.UDP_SOCKET.sendto(pickle.dumps(response), addr)
+            return
+
+        start_price = int(start_price)
+        duration = int(duration)
+        start_time = time.time()
+        self.listed_items[item_name]={
+            "Item_Name": item_name,
+            "Item_Description": item_description,
+            "Start_Price": start_price,
+            "Duration": duration,
+            "Start_Time": start_time,
+            "Client_Addr": addr,
+            "Prev_Negotiated": False
+        }
+       
+
+        response = {"Server Response": "ITEM_LISTED", "RQ#": request_id}
+        self.UDP_SOCKET.sendto(pickle.dumps(response), addr)
+
+     except Exception as e:
+        print(f"Error processing request: {e}")
+        error_response = {"Server Response": "LIST_DENIED", "RQ#": "N/A", "Reason": str(e)}
+        self.UDP_SOCKET.sendto(pickle.dumps(error_response), addr)
+
+
 
     def startServer(self):
         # Create a UDP Datagram Socket
+        auction_monitor_thread = threading.Thread(target=self.monitor_auctions, daemon=True)
+        auction_monitor_thread.start()
         try:
             self.UDP_SOCKET = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
             print(f"UDP Datagram Socket created... \n")
@@ -62,6 +167,18 @@ class Server:
             print(f"Bind failed.  Error: {str(e)} \n")
             sys.exit()
         print(f"TCP Socket binding complete. \n")
+
+    
+    ## UDP Handling
+    def udpCommunicationHandling(self, request_data, client_address, udp_socket):
+     try:
+         print(f"A UDP Request has been received from {client_address[0]}:{str(client_address[1])}... \n")
+         try:
+          
+            #request_data = pickle.loads(message)
+            message = request_data.get("Type")
+            # Determine the type of message that needs to be handled, and apply the appropriate method.
+
 
     ## UDP Handling
     def udpCommunicationHandling(self, message, client_address, udp_socket):
