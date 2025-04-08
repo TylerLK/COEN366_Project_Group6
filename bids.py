@@ -10,7 +10,7 @@ def bid_handling(bid_request, bids, active_auctions, item_list, server_socket, c
     # Check if the bid request contains the correct information (i.e., 5 segments of information)
     if len(deconstructed_bid_request) != 5:
         # Call the BID_REJECTED method to tell the client their registration request was invalid.
-        bid_rejection_message = f"BID_RJECTED {deconstructed_bid_request[1]}: Invalid number of bid parameters. {len(deconstructed_bid_request)} sent, 5 expected... \n"       
+        bid_rejection_message = f"BID_REJECTED {deconstructed_bid_request[1]}: Invalid number of bid parameters. {len(deconstructed_bid_request)} sent, 5 expected... \n"       
         BID_REJECTED(server_socket, client_address, bid_rejection_message)
         print(bid_rejection_message)
         return bids
