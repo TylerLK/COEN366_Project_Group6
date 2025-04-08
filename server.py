@@ -3,89 +3,21 @@ import socket
 import sys
 import pickle
 import threading
-import time
+from concurrent.futures import ThreadPoolExecutor
 
 # User-Defined Modules
 from registration import registration_handling, deregistration_handling
-
 from item_listing import ITEM_LISTED, LIST_DENIED
-from subscriptions import subscription_handling, desubscription_handling
 
 
 # Server Class
 class Server:
     ### Attributes
-    # A variable that will keep track of the different communication links between the server and clients
-    rq = 1 
-    
-    # A dictionary containing the existing clients
-    registered_clients = {
-        # "client_name": {
-        #     "rq": rq,
-        #     "role": role,
-        #     "ip_address": ip_address,
-        #     "udp_port": udp_port,
-        #     "tcp_port": tcp_port
-        # },
-        # ...
-    } 
-    
-    # A dictionary containing the items that are up for auction
-    listed_items = {
-        # "item_name": {
-        #     "item_description": item_description,
-        #     "start_price": start_price,
-        #     "duration": auction_duration,
-        #     "seller_name": seller
-        # },
-        # ...
-    }
+    rq = 1  # A variable that will keep track of the different communication links between the server and clients
+    registered_clients = {}  # A dictionary containing the existing clients
+    listed_items = {}  # A dictionary containing the items that are up for auction
+    client_bids = {}  # A dictionary containing the client bids for each item
 
-    # A dictionary containing the clients that are subscribed to a given item
-    item_subscriptions = {
-        # "item_name": {
-        #     "rq": rq,
-        #     "subscribed_clients": [
-        #          "client_name_1",
-        #          "client_name_2",
-        #          ...
-        #     ]
-        # },
-        # ...
-    }
-
-    # A dictionary conatining the current auctions that are being conducted by the server
-    active_auctions = {
-        # "item_name": {
-        #     "rq": rq,
-        #     "item_description": description,
-        #     "current_price": price,
-        #     "time_left": time,
-        # },
-        # ...
-    }
-
-    # A dictionary containing the client bids for each item
-    client_bids = {
-        # "item_name": {
-        #     "client_name_1" : bid_amount_1,
-        #     "client_name_2" : bid_amount_2,
-        #     ...
-        #  },
-        #  ...
-    }
-
-    # A dictionary containing the auctions that have been completed by the server
-    completed_auctions = {
-        # "item_name": {
-        #     "rq": rq,
-        #     "final_price": price,
-        #     "buyer_name": buyer,
-        #     "seller_name": seller,
-        # },
-        # ...
-    }
-    
     ### Methods
     def __init__(self):
         self.HOST = '0.0.0.0'
@@ -93,6 +25,9 @@ class Server:
         self.TCP_PORT = 6000
         self.UDP_SOCKET = None
         self.TCP_SOCKET = None
+        
+        self.pool = ThreadPoolExecutor(max_workers=10)
+
 
     def monitor_auctions(self):
      while True:
@@ -193,6 +128,8 @@ class Server:
         error_response = {"Server Response": "LIST_DENIED", "RQ#": "N/A", "Reason": str(e)}
         self.UDP_SOCKET.sendto(pickle.dumps(error_response), addr)
 
+
+
     def startServer(self):
         # Create a UDP Datagram Socket
         auction_monitor_thread = threading.Thread(target=self.monitor_auctions, daemon=True)
@@ -212,8 +149,9 @@ class Server:
             sys.exit()
         print(f"UDP Datagram Socket binding complete. \n")
         # Start a thread to handle incoming UDP messages
-        udp_thread = threading.Thread(target=self.udpMessageReceiver, args=())
-        udp_thread.start()
+        self.pool.submit(self.udpMessageReceiver)
+        # Start a thread to handle incoming TCP messages
+        self.pool.submit(self.tcpCommunicationHandling)
 
         # Create a TCP Socket
         try:
@@ -229,6 +167,7 @@ class Server:
             print(f"Bind failed.  Error: {str(e)} \n")
             sys.exit()
         print(f"TCP Socket binding complete. \n")
+
     
     ## UDP Handling
     def udpCommunicationHandling(self, request_data, client_address, udp_socket):
@@ -241,33 +180,24 @@ class Server:
             # Determine the type of message that needs to be handled, and apply the appropriate method.
 
 
-            if request_type == ("REGISTER"):
-                self.registered_clients = registration_handling(request_data, self.registered_clients, udp_socket, client_address)
-            elif request_type == ("DEREGISTER"):
-                self.registered_clients = deregistration_handling(request_data, self.registered_clients, udp_socket, client_address)
-            elif request_type == ("SUBSCRIBE"):
-                self.item_subscriptions = subscription_handling(request_data, self.item_subscriptions, udp_socket, client_address)
-            elif request_type == ("DESUBSCRIBE"):
-                self.item_subscriptions = desubscription_handling(request_data, self.item_subscriptions, udp_socket, client_address)  
-            elif request_type == ("NEGOTIATE_RESPONSE"):
-                self.negotiation_response(request_data, client_address)
-            elif request_type == ("LIST_ITEM"):
-                self.list_item_response(request_data, client_address)
+    ## UDP Handling
+    def udpCommunicationHandling(self, message, client_address, udp_socket):
+        try:
+            print(f"A UDP Request has been received from {client_address[0]}:{str(client_address[1])}... \n")
 
+            # Determine the type of message that needs to be handled, and apply the appropriate method.
+            if message.startswith("REGISTER"):
+                registered_clients = registration_handling(message, self.registered_clients, udp_socket, client_address)
+                # print dictionary of registered clients
+                print(f"Registered Clients: {self.registered_clients} \n")
+            elif message.startswith("DEREGISTER"):
+                registered_clients = deregistration_handling(message, self.registered_clients, udp_socket,
+                                                             client_address)
             else:
-                    reply = f"Invalid UDP communication request type: {request_type} \n"
-                    print(reply)
-                    self.UDP_SOCKET.sendto(pickle.dumps(reply), client_address)
-         except pickle.UnpicklingError as e:
-                print(f"Error decoding UDP message: {e}")
-                reply = "Error decoding your message."
+                reply = f"Invalid UDP communication request: {message} \n"
+                print(reply)
                 self.UDP_SOCKET.sendto(pickle.dumps(reply), client_address)
-         except Exception as e:
-                print(f"Error handling UDP request: {e}")
-                reply = "Error processing your request."
-                self.UDP_SOCKET.sendto(pickle.dumps(reply), client_address)
-
-     except Exception as e:
+        except Exception as e:
             print(f"UDP Communication Handling failed.  Error: {str(e)} \n")
 
     # This method will handle incoming UDP messages from clients.
@@ -279,25 +209,59 @@ class Server:
 
                 try:
                     # Attempt to deserialize the message sent by a client.
-                    request_data = pickle.loads(data)
+                    message = pickle.loads(data)
                 except pickle.UnpicklingError as e:
-                    print(f"Faulty message received from client at {client_address[0]}:{str(client_address[1])}.  Error Code: {str(e[0])}, Message: {e[1]} \n")
+                    print(
+                        f"Faulty message received from client at {client_address[0]}:{str(client_address[1])}.  Error Code: {str(e[0])}, Message: {e[1]} \n")
                     error_message = f"Error occured while processing your message... \n"
                     self.UDP_SOCKET.sendto(pickle.dumps(error_message), client_address)
                     continue
-                self.udpCommunicationHandling(request_data, client_address, self.UDP_SOCKET)
+
+                self.udpCommunicationHandling(message, client_address, self.UDP_SOCKET)
+
                 # Echo the received message back to the client
-                # response = f"Echo: {message} \n"
-                # self.UDP_SOCKET.sendto(pickle.dumps(response), client_address)
+                response = f"Echo: {message} \n"
+                self.UDP_SOCKET.sendto(pickle.dumps(response), client_address)
+
+                print(f"Registered Clients: {self.registered_clients} \n")
 
                 # TODO: Change this behaviour to actually handle the message correctly.
 
             except Exception as e:
-                print(f"Error: {e}")     
+                print(f"Error: {e}")
 
-    ## TCP Handling
+                ## TCP Handling
+
+    def handle_tcp_client(self, client_socket, client_address):
+        try:
+            data = client_socket.recv(1024)
+            if not data:
+                print(f"TCP Client {client_address} disconnected.")
+                client_socket.close()
+                return
+            message = pickle.loads(data)
+            print(f"Received TCP message from {client_address}: {message}")
+
+            # TODO: Add logic here to handle messages
+
+            # Echo for now:
+            response = f"Server received your message: {message}"
+            client_socket.send(pickle.dumps(response)) #test
+
+        except Exception as e:
+            print(f"Error handling TCP client {client_address}: {e}")
+        finally:
+            client_socket.close()
+
     def tcpCommunicationHandling(self):
-        print(f"The server is handling TCP communication... \n") 
+        self.TCP_SOCKET.listen()
+        print("TCP Server listening for connections...\n")
+        while True:
+            client_socket, client_address = self.TCP_SOCKET.accept()
+            print(f"TCP Connection established with {client_address}")
+            self.pool.submit(self.handle_tcp_client, client_socket, client_address)
+
+
 # End of Server Class
 
 if __name__ == "__main__":
