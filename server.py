@@ -129,7 +129,7 @@ class Server:
 
             # Echo for now:
             response = f"Server received your message: {message}"
-            client_socket.send(pickle.dumps(response))
+            client_socket.send(pickle.dumps(response)) #test
 
         except Exception as e:
             print(f"Error handling TCP client {client_address}: {e}")
