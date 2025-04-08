@@ -31,9 +31,27 @@ def BID(rq, item, bid_amount):
         "bid_amount": bid_amount
     }
 
+<<<<<<< HEAD
     # Serialize the message using pickle
     serialized_message = pickle.dumps(message)
     return serialized_message
+=======
+    # Check if the potential bid is higher than the current bid price of the item
+    if item_name not in active_auctions:
+        # The item in question is not currently up for auction
+        bid_rejection_message = f"BID_REJECTED {rq}: The '{item_name}' item is not currently up for auction... \n"
+        BID_REJECTED(server_socket, client_address, bid_rejection_message)
+        print(bid_rejection_message)
+        return bids
+    else:
+        current_price = active_auctions[item_name]["current_price"]
+        if float(bid_amount) <= current_price:
+            # The bid must be rejected by the server
+            bid_rejection_message = f"BID_REJECTED {rq}: The bid for {item_name} must be greater than the current price (i.e., {current_price})... \n"
+            BID_REJECTED(server_socket, client_address, bid_rejection_message)
+            print(bid_rejection_message)
+            return bids
+>>>>>>> bc0b6c0 (Bids commit)
 
 '''
 handle_bid function to implement for the server side in server.py'
