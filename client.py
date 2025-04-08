@@ -184,8 +184,7 @@ class Client:
                 
                     # Attempt to deserialize the message sent by a client.
                     response = pickle.loads(data)
-                    print("\nNegotiation request recieved:", response)
-
+                    print("\nNegotiation request received:", response)
                     negotiation_choice = input("Enter [1] to Accept or [2] to Reject: ")
                     if negotiation_choice == "1":
                                 negotiation_label = "ACCEPT"
