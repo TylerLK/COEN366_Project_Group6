@@ -210,8 +210,8 @@ class Server:
                     # Attempt to deserialize the message sent by a client.
                     message = pickle.loads(data)
                 except pickle.UnpicklingError as e:
-                    print(f"Faulty message received from client at {client_address[0]}:{str(client_address[1])}.  Error Code: {str(e[0])}, Message: {e[1]} \n")
-                    error_message = f"Error occured while processing your message... \n"
+                    print(f"Faulty message received from client at {client_address[0]}:{str(client_address[1])}.  Error: {str(e)} \n")
+                    error_message = f"Error occurred while processing your message... \n"
                     self.UDP_SOCKET.sendto(pickle.dumps(error_message), client_address)
                     continue
 
