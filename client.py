@@ -25,7 +25,8 @@ class Client:
         self.tcp_port = None
         self.udp_socket = None
         self.tcp_socket = None
- self.pool = ThreadPoolExecutor(max_workers=10) #TEST IF WE CAN ADD MORE WORKERS
+
+        self.pool = ThreadPoolExecutor(max_workers=10) #TEST IF WE CAN ADD MORE WORKERS
     def handle_negotiation_request(self, message):
                 print("\nNegotiation request received:", message)
                 negotiation_choice = input("Enter [1] to Accept or [2] to Reject: ")
@@ -82,14 +83,13 @@ class Client:
         self.pool.submit(self.tcpMessageReceiver)
         self.pool.submit(self.udpMessageReceiver)
 
-    def udpMessageSender(self):
-        while True:
-            message = input("Your message to the server: ").strip()
+    def udpMessageSender(self, message):
             try:
                 data = pickle.dumps(message)
+                print(f"Message sent to server", message)
             except pickle.PicklingError as e:
                 print(f"Faulty message to be sent to server at.  Error Code: {str(e)} \n")
-                break
+                
             self.udp_socket.sendto(data, (self.SERVER_IP, self.SERVER_UDP_PORT))
 
     def udpMessageReceiver(self):
@@ -100,8 +100,11 @@ class Client:
                 try:
                     message = pickle.loads(data)
                     print(f"Message received from server: {message} \n")
-                    if isinstance(message, dict) and message.get("Type") == "NEGOTIATE_REQ":
+                    if message.get("Type") == "NEGOTIATE_REQ":
                        self.handle_negotiation_request(message)
+                    else:
+                       client.menu_select()
+                    
                 except pickle.UnpicklingError as e:
                     print(f"Faulty message received from server at {server_address[0]}:{str(server_address[1])}.  Error Code: {str(e)} \n")
                     error_message = f"Error occurred while processing your message... \n"
@@ -121,60 +124,30 @@ class Client:
             self.tcp_socket.close()
             print("TCP Socket closed.")
 
-    # def handle_negotiation(self, response_data):
-    #     print("\nNegotiation request recieved:", response_data)
-    #     negotiation_choice = input("Enter [1] to Accept or [2] to Reject: ")
-    #     if negotiation_choice == "1":
-    #         negotiation_label = "ACCEPT"
-    #         new_price = input("Enter new price: ")
-    #     else:
-    #         negotiation_label = "REFUSE"
-    #         new_price = "REJECT"
-    #
-    #     item_name = response_data["Item_Name"]
-    #     rq = response_data.get("RQ#", random.randint(100, 900))
-    #     request_data_au = {
-    #         "Server Response": negotiation_label,
-    #         "RQ#": rq,
-    #         "Item_Name": item_name,
-    #         "New Price": new_price,
-    #     }
-    #
-    #     print("Sending negotiation response:", request_data_au)
-    #     message = pickle.dumps(request_data_au)
-    #     self.udp_socket.sendto(message, (self.SERVER_IP, self.SERVER_UDP_PORT))
-    #
-    #     try:
-    #         response, _ = s.recvfrom(1024)
-    #         response_data = pickle.loads(response)
-    #         print("Server Response:", response_data)
-    #     except Exception as e:
-    #         print(f"Error receiving negotiation request: {e}")
-
-    def menu_select(self, response_data=None):
+    def menu_select(self):
         while True:
             print("What would you like to do?\n")
             print("[0] Exit\n")
             print("[1] Register with the server\n")
-            if self.registration_rq is not None:
-                print(f"[2] deregister from server\n")
+            
             if self.role == "Seller":
-                print(f"[3] List an item for auction\n")
+                print(f"[2] List an item for auction\n")
             elif self.role == "Buyer":
-                print(f"[3] Browse items\n")
-                print(f"[4] Make an offer on an item\n")
+                print(f"[2] Browse items\n")
+                print(f"[3] Make an offer on an item\n")
+            elif self.registration_rq is not None:
+                print(f"[4] Deregister from server\n")
 
-            input_selection = input("Enter selection: ")
+            input_selection = input("Press enter key then Enter selection: ")
 
             if input_selection == "0":
                 print(f"Exiting the system!\n")
                 break
             elif input_selection == "1":
                 registration_input_handling(self.registration_rq, self.name, self.role, self.ip_address, self.udp_port, self.tcp_port, self.udp_socket, (self.SERVER_IP, self.SERVER_UDP_PORT))
-            elif input_selection == "2" and self.registration_rq is not None:
-                deregistration_input_handling(self)
-            elif input_selection == "3" and self.role == "Seller":
-                print("In List ITEM!")
+
+            elif input_selection == "2" and self.role == "Seller":
+                print("List Item Selected:\n")
                 while True:
                     RQ = random.randint(100, 900)
                     item_name = input("Enter item name (or type 'exit' to quit): ")
@@ -191,86 +164,15 @@ class Client:
                         "Start_Price": start_price,
                         "Duration": duration,
                     }
-                    client.startClient()
-                    if response_data and "ITEM_LISTED" in response_data.values():
-                        item_listed_response = input("Select [1] to list another item or [2] to wait for negotiations: ")
-                        if item_listed_response == "1":
-                            continue
-                        else:
-                            break
-                if response_data and "LIST_DENIED" in response_data.values():
-                    continue
-            elif input_selection == "3" and self.role == "Buyer":
-                print("Browse items here")
-            elif input_selection == "4" and self.role == "Buyer":
-                print("make offer here")
-
-
-                    print("Sending listing request:", request_data)
-                    message = pickle.dumps(request_data)
-                    self.udp_socket.sendto(message, (self.SERVER_IP, self.SERVER_UDP_PORT))
                     
-                    data = self.udpMessageReceiver()
-                
-                    # Attempt to deserialize the message sent by a client.
-                    response = pickle.loads(data)
-                    print("\nNegotiation request received:", response)
-                    negotiation_choice = input("Enter [1] to Accept or [2] to Reject: ")
-                    if negotiation_choice == "1":
-                                negotiation_label = "ACCEPT"
-                                new_price = input("Enter new price: ")
-                    else:
-                                negotiation_label = "REFUSE"
-                                new_price = "REJECT"
-
-                    #             item_name = response["Item_Name"]
-                    #             rq = response.get("RQ#", random.randint(100, 900))
-                    #             request_data = {
-                    #             "Server Response": negotiation_label,
-                    #             "RQ#": rq,
-                    #             "Item_Name": item_name,
-                    #             "New Price": new_price,         
-                    #                     }
-                    #             client.startClient()
-
-                    #             print("Sending listing request:", request_data)
-                    #             message = pickle.dumps(request_data)
-                    #             self.udp_socket.sendto(message, (self.SERVER_IP, self.SERVER_UDP_PORT))
-            
-            elif input_selection=="3" and self.role=="Buyer":
-                            print("Browse items here")
-            elif input_selection=="4" and self.role=="Buyer":
-                            print("make offer here")
-            elif input_selection=="4" and self.role=="Seller":
-                 
-                data = self.udpMessageReceiver()
-                
-                    # Attempt to deserialize the message sent by a client.
-                response = pickle.loads(data)
-                print("\nNegotiation request received:", response)
-                negotiation_choice = input("Enter [1] to Accept or [2] to Reject: ")
-                
-                if negotiation_choice == "1":
-                    negotiation_label = "ACCEPT"
-                    new_price = input("Enter new price: ")
-                else:
-                    negotiation_label = "REFUSE"
-                    new_price = "REJECT"
-
-                item_name = message["Item_Name"]
-                rq = message.get("RQ#", random.randint(100, 900))
-                
-                request_data = {
-                    "Type": "NEGOTIATE_RESPONSE",
-                    "Server Response": negotiation_label,
-                    "RQ#": rq,
-                    "Item_Name": item_name,
-                    "New Price": new_price,         
-                }
-                
-                print("Sending negotiation response:", request_data)
-                message = pickle.dumps(request_data)
-                self.udp_socket.sendto(message, (self.SERVER_IP, self.SERVER_UDP_PORT))
+                    client.udpMessageSender(request_data)
+                    
+            elif input_selection == "2" and self.role == "Buyer":
+                print("Browse items here")
+            elif input_selection == "3" and self.role == "Buyer":
+                print("Make offer here")
+            elif input_selection == "4" and self.registration_rq is not None:
+                deregistration_input_handling(self)
            
     ## TCP Handling
     # TODO: Implement TCP Handling when modules are available

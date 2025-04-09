@@ -3,6 +3,7 @@ import socket
 import sys
 import pickle
 import threading
+import time
 from concurrent.futures import ThreadPoolExecutor
 
 # User-Defined Modules
@@ -76,6 +77,7 @@ class Server:
             "Time Left": elapsed_time
         }
         self.UDP_SOCKET.sendto(pickle.dumps(response), addr)
+        
 
      except Exception as e:
         print(f"Error processing negotiation: {e}")
@@ -169,30 +171,26 @@ class Server:
         print(f"TCP Socket binding complete. \n")
 
     
-    ## UDP Handling
-    def udpCommunicationHandling(self, request_data, client_address, udp_socket):
-     try:
-         print(f"A UDP Request has been received from {client_address[0]}:{str(client_address[1])}... \n")
-         try:
-          
-            #request_data = pickle.loads(message)
-            message = request_data.get("Type")
-            # Determine the type of message that needs to be handled, and apply the appropriate method.
-
 
     ## UDP Handling
     def udpCommunicationHandling(self, message, client_address, udp_socket):
         try:
             print(f"A UDP Request has been received from {client_address[0]}:{str(client_address[1])}... \n")
-
+            request_type = message.get("Type")
             # Determine the type of message that needs to be handled, and apply the appropriate method.
-            if message.startswith("REGISTER"):
+            if request_type==("REGISTER"):
                 registered_clients = registration_handling(message, self.registered_clients, udp_socket, client_address)
                 # print dictionary of registered clients
                 print(f"Registered Clients: {self.registered_clients} \n")
-            elif message.startswith("DEREGISTER"):
+            elif request_type==("DEREGISTER"):
                 registered_clients = deregistration_handling(message, self.registered_clients, udp_socket,
                                                              client_address)
+            
+            elif request_type == ("NEGOTIATE_RESPONSE"):
+                 self.negotiation_response(message, client_address)
+            
+            elif request_type == ("LIST_ITEM"):
+                 self.list_item_response(message, client_address)
             else:
                 reply = f"Invalid UDP communication request: {message} \n"
                 print(reply)
@@ -206,13 +204,13 @@ class Server:
             try:
                 data, client_address = self.UDP_SOCKET.recvfrom(1024)
                 print(f"Message received from a client at {client_address[0]}:{str(client_address[1])}... \n")
+                print(f"Message: ", data)
 
                 try:
                     # Attempt to deserialize the message sent by a client.
                     message = pickle.loads(data)
                 except pickle.UnpicklingError as e:
-                    print(
-                        f"Faulty message received from client at {client_address[0]}:{str(client_address[1])}.  Error Code: {str(e[0])}, Message: {e[1]} \n")
+                    print(f"Faulty message received from client at {client_address[0]}:{str(client_address[1])}.  Error Code: {str(e[0])}, Message: {e[1]} \n")
                     error_message = f"Error occured while processing your message... \n"
                     self.UDP_SOCKET.sendto(pickle.dumps(error_message), client_address)
                     continue
