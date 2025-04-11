@@ -7,6 +7,10 @@ def bid_handling(bid_request, bids, active_auctions, item_list, server_socket, c
     # Deconstruct the incoming bid request message
     deconstructed_bid_request = bid_request.split("|")
 
+    # Update the global "rq" variable if the client's incoming rq value is null
+    if deconstructed_bid_request[1] == "None":
+        deconstructed_bid_request[1] = active_auctions[deconstructed_bid_request[2]]["rq"]
+
     # Check if the bid request contains the correct information (i.e., 5 segments of information)
     if len(deconstructed_bid_request) != 5:
         # Call the BID_REJECTED method to tell the client their registration request was invalid.

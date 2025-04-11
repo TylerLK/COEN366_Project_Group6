@@ -2,7 +2,7 @@ import pickle
 
 ## Server-Side Functions
 
-# This method will allow the server to internally process an incoming reigstration request from a client
+# This method will allow the server to internally process an incoming registration request from a client
 def registration_handling(global_rq, registration_request, registered_users, server_socket, client_address):
     # Deconstruct the incoming registration request message
     deconstructed_registration_request = registration_request.split("|")
