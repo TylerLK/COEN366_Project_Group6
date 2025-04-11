@@ -15,7 +15,7 @@ def list_item_handling(global_rq, listing_request, listed_items, server_socket, 
 
         # Validate the listing request format
         if len(deconstructed_item_listing_request) != 6:
-            item_listing_denial_message = f"LIST_DENIED|{rq}|Invalid number of parameters. {len(deconstructed_item_listing_request)} sent, 6 expected. \n"
+            item_listing_denial_message = f"LIST_DENIED|{deconstructed_item_listing_request[1]}|Invalid number of parameters. {len(deconstructed_item_listing_request)} sent, 6 expected. \n"
             LIST_DENIED(server_socket, client_address, item_listing_denial_message)
             print(item_listing_denial_message)
             return listed_items, global_rq
