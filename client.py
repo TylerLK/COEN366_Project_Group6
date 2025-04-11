@@ -6,10 +6,10 @@ import time
 import queue
 from concurrent.futures import ThreadPoolExecutor
 
-s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-
 # User-Defined Modules
 from registration import registration_input_handling, deregistration_input_handling
+from item_listing import list_item_input_handling
+from bids import bid_input_handling
 
 class Client:
     # Attributes
@@ -31,6 +31,7 @@ class Client:
         self.pending_negotiation = None
 
         self.pool = ThreadPoolExecutor(max_workers=10) #TEST IF WE CAN ADD MORE WORKERS
+
     def handle_negotiation_request(self, message):
                 print("\nNegotiation request received:", message)
                 negotiation_choice = input("Enter [1] to Accept or [2] to Reject: ")
@@ -57,9 +58,7 @@ class Client:
                 message = pickle.dumps(request_data)
                 self.udp_socket.sendto(message, (self.SERVER_IP, self.SERVER_UDP_PORT))
 
-       
-
-
+    # This method will bind and create the UDP and TCP sockets for the client
     def startClient(self):
         if self.udp_socket or self.tcp_socket:
             print("Client already started.")
@@ -70,6 +69,7 @@ class Client:
             self.udp_socket.bind((self.ip_address, 0))
             self.udp_port = self.udp_socket.getsockname()[1]
             print(f"UDP socket created and bound to {self.ip_address}:{self.udp_port}")
+
         except socket.error as e:
             print(f"UDP socket error: {str(e)}")
             sys.exit()
@@ -86,6 +86,7 @@ class Client:
 
         self.pool.submit(self.tcpMessageReceiver)
         self.pool.submit(self.udpMessageReceiver)
+    # END startClient
 
     def udpMessageSender(self, message):
             try:
@@ -102,15 +103,15 @@ class Client:
             try:
                 data, server_address = self.udp_socket.recvfrom(1024)
                 print(f"Message received from server at {server_address[0]}:{str(server_address[1])}... \n")
-                
+
                 message = pickle.loads(data)
                 print(f"Message received from server: {message} \n")
-                
-                
+
                 if isinstance(message, dict):
                     request_type = message.get("Type")
                     if request_type == "NEGOTIATE_REQ":
                         self.pending_negotiation = message
+
                         print(f"Press Enter key and select option [5] in main menu to respond")
                     else:
                         print(message)
@@ -121,12 +122,12 @@ class Client:
                     print(message)
                 else:
                     print(f"Received message from server: {message}")
-            
+
             except pickle.UnpicklingError as e:
                 print(f"Faulty message received from server. Error Code: {str(e)} \n")
             except Exception as e:
                 print(f"Error in UDP receiver: {str(e)}")
-                # while loop to recieve messages    
+
     def tcpMessageReceiver(self):
         print("TCP listener is running...")
         #need to implement TCP handling logic
@@ -135,6 +136,7 @@ class Client:
         if self.udp_socket:
             self.udp_socket.close()
             print("UDP Socket closed.")
+
         if self.tcp_socket:
             self.tcp_socket.close()
             print("TCP Socket closed.")
@@ -174,6 +176,7 @@ class Client:
                     item_description = input("Enter item description: ")
                     start_price = input("Enter start price ($): ")
                     duration = input("Enter duration (minutes): ")
+                    # list_item_input_handling(RQ, item_name, item_description, start_price, duration, self.udp_socket, (self.SERVER_IP, self.SERVER_UDP_PORT))
                     request_data = {
                         "Type": "LIST_ITEM",
                         "RQ#": RQ,
@@ -182,20 +185,19 @@ class Client:
                         "Start_Price": start_price,
                         "Duration": duration,
                     }
-                    
-                    client.udpMessageSender(request_data)
-                    
-                    
+                    client.udpMessageSender(request_data)     
                     
             elif input_selection == "2" and self.role == "Buyer":
                 print("Browse items here")
             elif input_selection == "3" and self.role == "Buyer":
                 print("Make offer here")
             elif input_selection == "4" and self.registration_rq is not None:
-                deregistration_input_handling(self)
+
+                deregistration_input_handling(self.registration_rq, self.name, self.udp_socket, (self.SERVER_IP, self.SERVER_UDP_PORT))
             elif input_selection=="5" and self.pending_negotiation is not None:
                 self.handle_negotiation_request(self.pending_negotiation)
                 self.handle_negotiation_request=None
+
            
     ## TCP Handling
     # TODO: Implement TCP Handling when modules are available
@@ -204,7 +206,6 @@ class Client:
 
 # This class will define behaviour specific to seller clients
 class Seller (Client):
-
     def __init__(self, name):
         super().__init__(name, "Seller")
 
@@ -221,7 +222,7 @@ if __name__ == "__main__":
             print(f"Invalid name! Name cannot be empty... \n")
         else:
             while True:
-                name_confirmation = input(f"Are you sure you would like to be called {name}? [y/n]").lower()
+                name_confirmation = input(f"Are you sure you would like to be called {name}? [y/n] ").lower()
                 if name_confirmation == "y":
                     break
                 elif name_confirmation == "n":
@@ -232,10 +233,10 @@ if __name__ == "__main__":
                 break
 
     while True:
-        role = input("Are you a seller or a buyer? [s/b]").lower()
+        role = input("Are you a seller or a buyer? [s/b] ").lower()
         if role == "s":
             while True:
-                role_confirmation = input(f"Are you sure you would like to be a seller? [y/n]").lower()
+                role_confirmation = input(f"Are you sure you would like to be a seller? [y/n] ").lower()
                 if role_confirmation == "y":
                     client = Seller(name)
                     break

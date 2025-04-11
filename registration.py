@@ -1,22 +1,21 @@
 import pickle
 
-
 ## Server-Side Functions
 
 # This method will allow the server to internally process an incoming reigstration request from a client
 def registration_handling(global_rq, registration_request, registered_users, server_socket, client_address):
     # Deconstruct the incoming registration request message
-    deconstructed_registration_request = registration_request.split(" ")
+    deconstructed_registration_request = registration_request.split("|")
 
     # Update the global "rq" variable if the client's incoming rq value is null
-    if deconstructed_registration_request[1] is None:
-        deconstructed_registration_request[1] = global_rq
+    if deconstructed_registration_request[1] == "None":
+        deconstructed_registration_request[1] = str(global_rq)
         global_rq += 1
 
     # Check if the registration request contains the correct information (i.e., 7 segments of information)
     if len(deconstructed_registration_request) != 7:
         # Call the REGISTER_DENIED method to tell the client their registration request was invalid.
-        registration_denial_message = f"REGISTER_DENIED {deconstructed_registration_request[1]}: Invalid number of registration parameters. {len(deconstructed_registration_request)} sent, 7 expected... \n"
+        registration_denial_message = f"REGISTER_DENIED|{deconstructed_registration_request[1]}|Invalid number of registration parameters. {len(deconstructed_registration_request)} sent, 7 expected... \n"
         REGISTER_DENIED(server_socket, client_address, registration_denial_message)
         print(registration_denial_message)
         return registered_users, global_rq
@@ -28,7 +27,7 @@ def registration_handling(global_rq, registration_request, registered_users, ser
     # Check if the user already exists in the dictionary of pre-existing users
     if name in registered_users:
         # Call the REGISTER_DENIED method to tell the client their registration request was invalid.
-        registration_denial_message = f"REGISTER_DENIED {rq}: Client name already in use. \n"
+        registration_denial_message = f"REGISTER_DENIED|{rq}|Client name already in use. \n"
         REGISTER_DENIED(server_socket, client_address, registration_denial_message)
         print(registration_denial_message)
         return registered_users, global_rq
@@ -41,7 +40,7 @@ def registration_handling(global_rq, registration_request, registered_users, ser
         print(f"Registered Clients: {registered_users} \n")
 
         # Call the REGISTERED method to acknowledge the client's registration request
-        registration_confirmation_message = f"REGISTERED {rq} \n"
+        registration_confirmation_message = f"REGISTERED|{rq} \n"
         REGISTERED(server_socket, client_address, registration_confirmation_message)
         print(registration_confirmation_message)
         return registered_users, global_rq
@@ -50,16 +49,16 @@ def registration_handling(global_rq, registration_request, registered_users, ser
 # This method will allow the server to internally process an incoming deregistration request from a client
 def deregistration_handling(global_rq, deregistration_request, registered_users, server_socket, client_address):
     # Deconstruct the incoming deregistration request message
-    deconstructed_deregistration_request = deregistration_request.split(" ")
+    deconstructed_deregistration_request = deregistration_request.split("|")
 
     # Update the global "rq" variable if the client's incoming rq value is null
-    if deconstructed_deregistration_request[1] is None:
-        deconstructed_deregistration_request[1] = global_rq
+    if deconstructed_deregistration_request[1] == "None":
+        deconstructed_deregistration_request[1] = str(global_rq)
         global_rq += 1
 
     # Check if the registration request contains the correct information (i.e., 3 segments of information)
     if len(deconstructed_deregistration_request) != 3:
-        deregistration_denial_message = f"DE_REGISTER_DENIED {deconstructed_deregistration_request[1]}: Invalid number of deregistration parameters. {len(deconstructed_deregistration_request)} sent, 3 expected... \n"
+        deregistration_denial_message = f"DE_REGISTER_DENIED|{deconstructed_deregistration_request[1]}|Invalid number of deregistration parameters. {len(deconstructed_deregistration_request)} sent, 3 expected... \n"
         server_socket.sendto(pickle.dumps(deregistration_denial_message), client_address)
         print(deregistration_denial_message)
         return registered_users, global_rq
@@ -70,14 +69,14 @@ def deregistration_handling(global_rq, deregistration_request, registered_users,
 
     # Delete the user from the dictionary of registered users, provided that the user exists
     if name in registered_users:
-        deregistration_confirmation_message = f"DE_REGISTERED {rq} \n"
+        deregistration_confirmation_message = f"DE_REGISTERED|{rq} \n"
         server_socket.sendto(pickle.dumps(deregistration_confirmation_message), client_address)
         del registered_users[name]
         print(deregistration_confirmation_message)
         return registered_users, global_rq
 
     else:
-        deregistration_denial_message = f"DE_REGISTER_DENIED {rq}: Client name does not exist. \n"
+        deregistration_denial_message = f"DE_REGISTER_DENIED|{rq}|Client name does not exist. \n"
         server_socket.sendto(pickle.dumps(deregistration_denial_message), client_address)
         print(deregistration_denial_message)
         return registered_users, global_rq
@@ -100,7 +99,7 @@ def REGISTER_DENIED(server_sock, client_addr, message):
 # This method will be used to handle user inputs for client-side registration.
 def registration_input_handling(rq, name, role, ip_address, udp_port, tcp_port, client_socket, server_address):
     # Create the message that will be sent to the server for registration
-    registration_request = f"REGISTER {rq} {name} {role} {ip_address} {udp_port} {tcp_port}"
+    registration_request = f"REGISTER|{rq}|{name}|{role}|{ip_address}|{udp_port}|{tcp_port}"
 
     # Call the REGISTER method to send the registration request to the server
     REGISTER(client_socket, server_address, registration_request)
@@ -109,7 +108,7 @@ def registration_input_handling(rq, name, role, ip_address, udp_port, tcp_port, 
 # This method will be used to handle user inputs for client-side deregistration.
 def deregistration_input_handling(rq, name, client_socket, server_address):
     # Create the message that will be sent to the server for deregistration
-    deregistration_request = f"DEREGISTER {rq} {name}"
+    deregistration_request = f"DEREGISTER|{rq}|{name}"
 
     # Call the DE_REGISTER method to send the deregistration request to the server
     DE_REGISTER(client_socket, server_address, deregistration_request)

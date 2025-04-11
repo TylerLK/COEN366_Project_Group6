@@ -8,16 +8,81 @@ from concurrent.futures import ThreadPoolExecutor
 
 # User-Defined Modules
 from registration import registration_handling, deregistration_handling
-from item_listing import ITEM_LISTED, LIST_DENIED
+from item_listing import ITEM_LISTED, LIST_DENIED, list_item_handling
 
 
 # Server Class
 class Server:
     ### Attributes
     rq = 1  # A variable that will keep track of the different communication links between the server and clients
-    registered_clients = {}  # A dictionary containing the existing clients
-    listed_items = {}  # A dictionary containing the items that are up for auction
-    client_bids = {}  # A dictionary containing the client bids for each item
+    
+    # A dictionary containing the existing clients
+    registered_clients = {
+        # "client_name": {
+        #     "rq": rq,
+        #     "role": role,
+        #     "ip_address": ip_address,
+        #     "udp_port": udp_port,
+        #     "tcp_port": tcp_port
+        # },
+        # ...
+    } 
+
+    # A dictionary containing the items that are up for auction
+    listed_items = {
+        # "item_name": {
+        #     "item_description": item_description,
+        #     "start_price": start_price,
+        #     "duration": auction_duration,
+        #     "seller_name": seller
+        # },
+        # ...
+    }
+
+    # A dictionary containing the clients that are subscribed to a given item
+    item_subscriptions = {
+        # "item_name": {
+        #     "rq": rq,
+        #     "subscribed_clients": [
+        #          "client_name_1",
+        #          "client_name_2",
+        #          ...
+        #     ]
+        # },
+        # ...
+    }
+
+    # A dictionary conatining the current auctions that are being conducted by the server
+    active_auctions = {
+        # "item_name": {
+        #     "rq": rq,
+        #     "item_description": description,
+        #     "current_price": price,
+        #     "time_left": time,
+        # },
+        # ...
+    }
+
+    # A dictionary containing the client bids for each item
+    client_bids = {
+        # "item_name": {
+        #     "client_name_1" : bid_amount_1,
+        #     "client_name_2" : bid_amount_2,
+        #     ...
+        #  },
+        #  ...
+    }
+
+    # A dictionary containing the auctions that have been completed by the server
+    completed_auctions = {
+        # "item_name": {
+        #     "rq": rq,
+        #     "final_price": price,
+        #     "buyer_name": buyer,
+        #     "seller_name": seller,
+        # },
+        # ...
+    }
 
     ### Methods
     def __init__(self):
@@ -28,7 +93,6 @@ class Server:
         self.TCP_SOCKET = None
         
         self.pool = ThreadPoolExecutor(max_workers=10)
-
 
     def monitor_auctions(self):
      while True:
@@ -51,7 +115,6 @@ class Server:
                 self.UDP_SOCKET.sendto(pickle.dumps(response), item["Client_Addr"])
 
     def negotiation_response(self, request_data, addr):
-   
      try:
         current_time = time.time()
         item_name = request_data.get("Item_Name")
@@ -171,32 +234,40 @@ class Server:
             sys.exit()
         print(f"TCP Socket binding complete. \n")
 
-    
-
     ## UDP Handling
     def udpCommunicationHandling(self, message, client_address, udp_socket):
         try:
             print(f"A UDP Request has been received from {client_address[0]}:{str(client_address[1])}... \n")
-            print(f"Message {message}")
-            request_type = message.get("Type")
-            # Determine the type of message that needs to be handled, and apply the appropriate method.
-            if request_type==("REGISTER"):
-                registered_clients = registration_handling(message, self.registered_clients, udp_socket, client_address)
-                # print dictionary of registered clients
-                print(f"Registered Clients: {self.registered_clients} \n")
-            elif request_type==("DEREGISTER"):
-                registered_clients = deregistration_handling(message, self.registered_clients, udp_socket,
-                                                             client_address)
             
-            elif request_type == ("NEGOTIATE_RESPONSE"):
-                 self.negotiation_response(message, client_address)
-            
-            elif request_type == ("LIST_ITEM"):
-                 self.list_item_response(message, client_address)
+            if isinstance(message, dict):
+                request_type = message.get("Type")
+
+                if request_type == ("NEGOTIATE_RESPONSE"):
+                    self.negotiation_response(message, client_address)
+
+                elif request_type == ("LIST_ITEM"):
+                    self.list_item_response(message, client_address)
+
+                    # elif message.startswith("LIST_ITEM"):
+                    # self.listed_items = list_item_handling(message, self.listed_items, udp_socket, client_address)
+                    # # print dictionary of listed items
+                    # print(f"Listed Items: {self.listed_items} \n")
+                
+            elif isinstance(message, str):
+                # Determine the type of message that needs to be handled, and apply the appropriate method.
+                if message.startswith("REGISTER"):
+                    self.registered_clients, self.rq = registration_handling(self.rq, message, self.registered_clients, udp_socket, client_address)
+                    # print dictionary of registered clients
+                    print(f"Registered Clients: {self.registered_clients} \n")
+
+                elif message.startswith("DEREGISTER"):
+                    self.registered_clients, self.rq = deregistration_handling(self.rq, message, self.registered_clients, udp_socket, client_address)
+
             else:
                 reply = f"Invalid UDP communication request: {message} \n"
                 print(reply)
                 self.UDP_SOCKET.sendto(pickle.dumps(reply), client_address)
+
         except Exception as e:
             print(f"UDP Communication Handling failed.  Error: {str(e)} \n")
 
@@ -206,7 +277,7 @@ class Server:
             try:
                 data, client_address = self.UDP_SOCKET.recvfrom(1024)
                 print(f"Message received from a client at {client_address[0]}:{str(client_address[1])}... \n")
-                print(f"Message: ", data)
+                print(f"Message: ", pickle.loads(data))
 
                 try:
                     # Attempt to deserialize the message sent by a client.
@@ -260,7 +331,6 @@ class Server:
             client_socket, client_address = self.TCP_SOCKET.accept()
             print(f"TCP Connection established with {client_address}")
             self.pool.submit(self.handle_tcp_client, client_socket, client_address)
-
 
 # End of Server Class
 
