@@ -1,9 +1,11 @@
 # Pre-Existing Modules
+import os
 import socket
 import sys
 import pickle
 import threading
 import time
+import json
 from concurrent.futures import ThreadPoolExecutor
 
 # User-Defined Modules
@@ -15,7 +17,7 @@ from item_listing import ITEM_LISTED, LIST_DENIED, list_item_handling
 class Server:
     ### Attributes
     rq = 1  # A variable that will keep track of the different communication links between the server and clients
-    
+
     # A dictionary containing the existing clients
     registered_clients = {
         # "client_name": {
@@ -26,7 +28,7 @@ class Server:
         #     "tcp_port": tcp_port
         # },
         # ...
-    } 
+    }
 
     # A dictionary containing the items that are up for auction
     listed_items = {
@@ -91,8 +93,80 @@ class Server:
         self.TCP_PORT = 6000
         self.UDP_SOCKET = None
         self.TCP_SOCKET = None
-        
+        self.load_data_from_files()
         self.pool = ThreadPoolExecutor(max_workers=10)
+
+
+    def createLogs(self):
+        """This function will run in a loop, writing logs every 10 seconds."""
+        while True:
+            try:
+                with open("registered_clients.json", "w") as f:
+                    json.dump(self.registered_clients, f, indent=4)
+            except IOError as e:
+                print(f"Error writing to file: {e}")
+
+            try:
+                with open("listed_items.json", "w") as f:
+                    json.dump(self.listed_items, f, indent=4)
+            except IOError as e:
+                print(f"Error writing to file: {e}")
+
+            try:
+                with open("item_subscriptions.json", "w") as f:
+                    json.dump(self.item_subscriptions, f, indent=4)
+            except IOError as e:
+                print(f"Error writing to file: {e}")
+
+            try:
+                with open("active_auctions.json", "w") as f:
+                    json.dump(self.active_auctions, f, indent=4)
+            except IOError as e:
+                print(f"Error writing to file: {e}")
+
+            try:
+                with open("client_bids.json", "w") as f:
+                    json.dump(self.client_bids, f, indent=4)
+            except IOError as e:
+                print(f"Error writing to file: {e}")
+
+            try:
+                with open("completed_auctions.json", "w") as f:
+                    json.dump(self.completed_auctions, f, indent=4)
+            except IOError as e:
+                print(f"Error writing to file: {e}")
+
+            # Wait for 10 seconds before writing again
+            time.sleep(10)
+
+    def start_periodic_task(self):
+        # Start the periodic task in a separate thread
+        self.pool.submit(self.createLogs)
+
+    def load_data_from_files(self):
+        self.registered_clients = self.load_json_file("registered_clients.json")
+        self.listed_items = self.load_json_file("listed_items.json")
+        self.client_bids = self.load_json_file("client_bids.json")
+        self.item_subscriptions = self.load_json_file("item_subscriptions.json")
+        self.active_auctions = self.load_json_file("active_auctions.json")
+        self.completed_auctions = self.load_json_file("completed_auctions.json")
+        print("Data successfully loaded from files")
+
+    def load_json_file(self, filename):
+        if os.path.exists(filename):
+            try:
+                with open(filename, 'r') as f:
+                    content = f.read().strip()
+                    if not content:
+                        return {}  # Return empty dict if file is empty
+                    return json.loads(content)
+            except Exception as e:
+                print(f"Error loading {filename}: {e}")
+                return {}
+        return {}
+
+
+
 
     def monitor_auctions(self):
      while True:
@@ -115,6 +189,7 @@ class Server:
                 self.UDP_SOCKET.sendto(pickle.dumps(response), item["Client_Addr"])
 
     def negotiation_response(self, request_data, addr):
+   
      try:
         current_time = time.time()
         item_name = request_data.get("Item_Name")
@@ -198,8 +273,9 @@ class Server:
 
     def startServer(self):
         # Create a UDP Datagram Socket
-        auction_monitor_thread = threading.Thread(target=self.monitor_auctions, daemon=True)
-        auction_monitor_thread.start()
+        self.pool.submit(self.monitor_auctions())
+        # auction_monitor_thread = threading.Thread(target=self.monitor_auctions, daemon=True)
+        # auction_monitor_thread.start()
         try:
             self.UDP_SOCKET = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
             print(f"UDP Datagram Socket created... \n")
@@ -234,11 +310,13 @@ class Server:
             sys.exit()
         print(f"TCP Socket binding complete. \n")
 
+    
+
     ## UDP Handling
     def udpCommunicationHandling(self, message, client_address, udp_socket):
         try:
             print(f"A UDP Request has been received from {client_address[0]}:{str(client_address[1])}... \n")
-            
+
             if isinstance(message, dict):
                 request_type = message.get("Type")
 
@@ -252,13 +330,14 @@ class Server:
                     # self.listed_items = list_item_handling(message, self.listed_items, udp_socket, client_address)
                     # # print dictionary of listed items
                     # print(f"Listed Items: {self.listed_items} \n")
-                
+
             elif isinstance(message, str):
                 # Determine the type of message that needs to be handled, and apply the appropriate method.
                 if message.startswith("REGISTER"):
                     self.registered_clients, self.rq = registration_handling(self.rq, message, self.registered_clients, udp_socket, client_address)
                     # print dictionary of registered clients
                     print(f"Registered Clients: {self.registered_clients} \n")
+                    self.createLogs()
 
                 elif message.startswith("DEREGISTER"):
                     self.registered_clients, self.rq = deregistration_handling(self.rq, message, self.registered_clients, udp_socket, client_address)
@@ -267,7 +346,6 @@ class Server:
                 reply = f"Invalid UDP communication request: {message} \n"
                 print(reply)
                 self.UDP_SOCKET.sendto(pickle.dumps(reply), client_address)
-
         except Exception as e:
             print(f"UDP Communication Handling failed.  Error: {str(e)} \n")
 
@@ -288,7 +366,8 @@ class Server:
                     self.UDP_SOCKET.sendto(pickle.dumps(error_message), client_address)
                     continue
 
-                self.udpCommunicationHandling(message, client_address, self.UDP_SOCKET)
+                # Submit the UDP message handling to the thread pool
+                self.pool.submit(self.udpCommunicationHandling, message, client_address, self.UDP_SOCKET)
 
                 # Echo the received message back to the client
                 response = f"Echo: {message} \n"
@@ -337,3 +416,11 @@ class Server:
 if __name__ == "__main__":
     server = Server()
     server.startServer()
+    server.start_periodic_task()
+
+    try:
+        # Keep server running or add a condition for shutdown
+        while True:
+            pass
+    except KeyboardInterrupt:
+        server.shutdownServer()
