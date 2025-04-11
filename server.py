@@ -11,6 +11,7 @@ from concurrent.futures import ThreadPoolExecutor
 # User-Defined Modules
 from registration import registration_handling, deregistration_handling
 from item_listing import ITEM_LISTED, LIST_DENIED, list_item_handling
+from subscriptions import subscription_handling, desubscription_handling
 
 
 # Server Class
@@ -341,6 +342,12 @@ class Server:
 
                 elif message.startswith("DEREGISTER"):
                     self.registered_clients, self.rq = deregistration_handling(self.rq, message, self.registered_clients, udp_socket, client_address)
+
+                elif message.startswith("SUBSCRIBE"):
+                    self.item_subscriptions, self.rq = subscription_handling(self.rq, message, self.item_subscriptions, udp_socket, client_address)
+
+                elif message.startswith("DE-SUBSCRIBE "):
+                    self.item_subscriptions, self.rq = desubscription_handling(self.rq, message, self.item_subscriptions, udp_socket, client_address)
 
             else:
                 reply = f"Invalid UDP communication request: {message} \n"
