@@ -3,9 +3,14 @@ import pickle
 ## Server-Side Functions
 
 # This method will allow the server to internally process an incoming subscription request from a client
-def subscription_handling(subscription_request, subscriptions, server_socket, client_address):
+def subscription_handling(global_rq, subscription_request, item_list, subscriptions, server_socket, client_address):
     # Deconstruct the incoming subscription request message
     deconstructed_subscription_request = subscription_request.split("|")
+
+    # Update the global "rq" variable if the client's incoming rq value is null
+    if deconstructed_subscription_request[1] == "None":
+        deconstructed_subscription_request[1] = str(global_rq)
+        global_rq += 1
 
     # Check if the subscription request contains the correct information (i.e., 4 segments of information)
     if len(deconstructed_subscription_request) != 4:
@@ -13,19 +18,25 @@ def subscription_handling(subscription_request, subscriptions, server_socket, cl
         subscription_denial_message = f"SUBSCRIPTION_DENIED|{deconstructed_subscription_request[1]}|Invalid number of subscription parameters. {len(deconstructed_subscription_request)} sent, 4 expected... \n"       
         SUBSCRIPTION_DENIED(server_socket, client_address, subscription_denial_message)
         print(subscription_denial_message)
-        return subscriptions
+        return subscriptions, global_rq
     
     else:
         # Create a variable for each piece of the subscription request
         message_type, rq, item_name, client_name = deconstructed_subscription_request
     
     # Check if the item is actually in the dictionary of subscriptions
-    if item_name not in subscriptions:
+    if item_name not in subscriptions and item_name in item_list:
         # Create a new key-value pair for this item in the dictionary of subscriptions
         subscriptions[item_name] = {
             "rq": rq,
-            "subscribed_clients": []
+            "subscribed_clients": [client_name]
         }
+
+        # Call the SUBSCRIBED method to akcnowledge the client's subscription request
+        subscription_confirmation_message = f"SUBSCRIBED|{rq} \n"
+        SUBSCRIBED(server_socket, client_address, subscription_confirmation_message)
+        print(subscription_confirmation_message)
+        return subscriptions, global_rq
 
     # Check if the user already exists in the list of subscribed clients
     if client_name in subscriptions[item_name]['subscribed_clients']:
@@ -33,30 +44,39 @@ def subscription_handling(subscription_request, subscriptions, server_socket, cl
         subscription_denial_message = f"SUBSCRIPTION_DENIED|{rq}|You have already subscribed to this item. \n"
         SUBSCRIPTION_DENIED(server_socket, client_address, subscription_denial_message)
         print(subscription_denial_message)
-        return subscriptions
+        return subscriptions, global_rq
     
     else:
         # Add the user to the dictionary of subscriptions
         subscriptions[item_name]["subscribed_clients"].append(client_name)
 
+        # Update the rq value of the response to match that of the item subscription list
+        rq = subscriptions[item_name]["rq"]
+        global_rq -= 1
+
         # Call the SUBSCRIBED method to acknowledge the client's subscription request
         subscription_confirmation_message = f"SUBSCRIBED|{rq} \n"
         SUBSCRIBED(server_socket, client_address, subscription_confirmation_message)
         print(subscription_confirmation_message)
-        return subscriptions
+        return subscriptions, global_rq
 # END subscription_handling
 
 # This method will allow the server to internally process an incoming desubscription request from a client
-def desubscription_handling(desubscription_request, subscriptions, server_socket, client_address):
+def desubscription_handling(global_rq, desubscription_request, subscriptions, server_socket, client_address):
     # Deconstruct the incoming desubscription request message
-    deconstructed_desubscription_request = desubscription_request.split(" ")
+    deconstructed_desubscription_request = desubscription_request.split("|")
+
+    # Update the global "rq" variable if the client's incoming rq value is null
+    if deconstructed_desubscription_request[1] == "None":
+        deconstructed_desubscription_request[1] = str(global_rq)
+        global_rq += 1
 
     # Check if the desubscription request contains the correct information (i.e., 4 segments of information)
     if len(deconstructed_desubscription_request) != 4:
         desubscription_denial_message = f"DE_SUBSCRIBE_DENIED|{deconstructed_desubscription_request[1]}|Invalid number of desubscription parameters. {len(deconstructed_desubscription_request)} sent, 4 expected... \n"
         server_socket.sendto(pickle.dumps(desubscription_denial_message), client_address)
         print(desubscription_denial_message)
-        return subscriptions
+        return subscriptions, global_rq
     
     else:
         # Create a variable for each piece of the subscription request
@@ -67,7 +87,7 @@ def desubscription_handling(desubscription_request, subscriptions, server_socket
         desubscription_denial_message = f"DE_SUBSCRIBE_DENIED|{rq}|Item does not exist. \n"
         server_socket.sendto(pickle.dumps(desubscription_denial_message), client_address)
         print(desubscription_denial_message)
-        return subscriptions
+        return subscriptions, global_rq
     
     # Delete the user from the dictionary of subscriptions, provided that the user exists
     if client_name in subscriptions[item_name]["subscribed_clients"]:
@@ -75,13 +95,13 @@ def desubscription_handling(desubscription_request, subscriptions, server_socket
         server_socket.sendto(pickle.dumps(desubscription_confirmation_message), client_address)
         subscriptions[item_name]["subscribed_clients"].remove(client_name)
         print(desubscription_confirmation_message)
-        return subscriptions
+        return subscriptions, global_rq
     
     else:
         desubscription_denial_message = f"DE_SUBSCRIBE_DENIED|{rq}|Client name does not exist. \n"
         server_socket.sendto(pickle.dumps(desubscription_denial_message), client_address)       
         print(desubscription_denial_message)
-        return subscriptions
+        return subscriptions, global_rq
 # END desubscription_handling
 
 # This method will be used as a positive acknowledgement for a potential client's subscription request.
