@@ -1,4 +1,5 @@
 # Pre-Existing Modules
+import os
 import socket
 import sys
 import pickle
@@ -92,7 +93,7 @@ class Server:
         self.TCP_PORT = 6000
         self.UDP_SOCKET = None
         self.TCP_SOCKET = None
-        
+        self.load_data_from_files()
         self.pool = ThreadPoolExecutor(max_workers=10)
 
 
@@ -139,20 +140,30 @@ class Server:
             time.sleep(10)
 
     def start_periodic_task(self):
-        """Start the periodic task in a separate thread."""
+        # Start the periodic task in a separate thread
         self.pool.submit(self.createLogs)
 
-    #     # Create a txt file that saves the dictionaries
-    #     with open('logs.txt', 'w') as f:
-    #         f.write("========= Registered Clients =========\n")
-    #         for client_name, info in self.registered_clients.items():
-    #             f.write(
-    #                 f"{client_name} | "
-    #                 f"role: {info['role']}, "
-    #                 f"ip: {info['ip_address']}, "
-    #                 f"UDP: {info['udp_port']}, "
-    #                 f"TCP: {info['tcp_port']}\n"
-    #             )
+    def load_data_from_files(self):
+        self.registered_clients = self.load_json_file("registered_clients.json")
+        self.listed_items = self.load_json_file("listed_items.json")
+        self.client_bids = self.load_json_file("client_bids.json")
+        self.item_subscriptions = self.load_json_file("item_subscriptions.json")
+        self.active_auctions = self.load_json_file("active_auctions.json")
+        self.completed_auctions = self.load_json_file("completed_auctions.json")
+        print("Data successfully loaded from files")
+
+    def load_json_file(self, filename):
+        if os.path.exists(filename):
+            try:
+                with open(filename, 'r') as f:
+                    content = f.read().strip()
+                    if not content:
+                        return {}  # Return empty dict if file is empty
+                    return json.loads(content)
+            except Exception as e:
+                print(f"Error loading {filename}: {e}")
+                return {}
+        return {}
 
 
 
@@ -261,8 +272,9 @@ class Server:
 
     def startServer(self):
         # Create a UDP Datagram Socket
-        auction_monitor_thread = threading.Thread(target=self.monitor_auctions, daemon=True)
-        auction_monitor_thread.start()
+        self.pool.submit(self.monitor_auctions())
+        # auction_monitor_thread = threading.Thread(target=self.monitor_auctions, daemon=True)
+        # auction_monitor_thread.start()
         try:
             self.UDP_SOCKET = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
             print(f"UDP Datagram Socket created... \n")
