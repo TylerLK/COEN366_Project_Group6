@@ -8,9 +8,13 @@ import time
 import json
 from concurrent.futures import ThreadPoolExecutor
 
+from announcements import AUCTION_ANNOUNCE
+from auction_update_server import listed_items
+from bids import bid_handling
 # User-Defined Modules
 from registration import registration_handling, deregistration_handling
 from item_listing import ITEM_LISTED, LIST_DENIED, list_item_handling
+from subscriptions import subscription_handling, desubscription_handling
 
 
 # Server Class
@@ -335,12 +339,24 @@ class Server:
                 # Determine the type of message that needs to be handled, and apply the appropriate method.
                 if message.startswith("REGISTER"):
                     self.registered_clients, self.rq = registration_handling(self.rq, message, self.registered_clients, udp_socket, client_address)
-                    # print dictionary of registered clients
-                    print(f"Registered Clients: {self.registered_clients} \n")
-                    self.createLogs() #copilot flagged this
 
                 elif message.startswith("DEREGISTER"):
                     self.registered_clients, self.rq = deregistration_handling(self.rq, message, self.registered_clients, udp_socket, client_address)
+
+                elif message.startswith("SUBSCRIBE"):
+                    self.item_subscriptions, self.rq = subscription_handling(self.rq, message, self.listed_items, self.item_subscriptions, udp_socket, client_address)
+
+                elif message.startswith("DE-SUBSCRIBE"):
+                    self.item_subscriptions, self.rq = desubscription_handling(self.rq, message, self.item_subscriptions, udp_socket, client_address)
+
+                elif message.startswith("BID"):
+                    self.client_bids = bid_handling(message, self.client_bids, self.active_auctions, self.listed_items, udp_socket, client_address)
+
+                elif message.startswith("LIST_ITEM"):
+                    self.listed_items = list_item_handling(self.rq, message, self.listed_items, udp_socket, client_address)
+
+                elif message.startswith("BID_UPDATE"):
+                    self.active_auctions = AUCTION_ANNOUNCE(message, self.active_auctions, self.client_bids, self.registered_clients , udp_socket, client_address)
 
             else:
                 reply = f"Invalid UDP communication request: {message} \n"
