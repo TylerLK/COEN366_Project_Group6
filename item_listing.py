@@ -7,7 +7,7 @@ def list_item_handling(listing_request, listed_items, server_socket, client_addr
     """
     try:
         # Deserialize the listing request
-        deconstructed_request = listing_request.split(" ")
+        deconstructed_request = listing_request.split("|")
 
         # Validate the listing request format
         if len(deconstructed_request) != 6:
