@@ -346,7 +346,7 @@ class Server:
                 elif message.startswith("SUBSCRIBE"):
                     self.item_subscriptions, self.rq = subscription_handling(self.rq, message, self.listed_items, self.item_subscriptions, udp_socket, client_address)
 
-                elif message.startswith("DE-SUBSCRIBE"):
+                elif message.startswith("DE_SUBSCRIBE"):
                     self.item_subscriptions, self.rq = desubscription_handling(self.rq, message, self.item_subscriptions, udp_socket, client_address)
 
                 elif message.startswith("BID"):
