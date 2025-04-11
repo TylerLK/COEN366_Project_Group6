@@ -5,12 +5,12 @@ import pickle
 # This method will allow the server to internally process an incoming registration request from a client
 def bid_handling(bid_request, bids, active_auctions, item_list, server_socket, client_address):
     # Deconstruct the incoming bid request message
-    deconstructed_bid_request = bid_request.split(" ")
+    deconstructed_bid_request = bid_request.split("|")
 
     # Check if the bid request contains the correct information (i.e., 5 segments of information)
     if len(deconstructed_bid_request) != 5:
         # Call the BID_REJECTED method to tell the client their registration request was invalid.
-        bid_rejection_message = f"BID_REJECTED {deconstructed_bid_request[1]}: Invalid number of bid parameters. {len(deconstructed_bid_request)} sent, 5 expected... \n"       
+        bid_rejection_message = f"BID_REJECTED|{deconstructed_bid_request[1]}|Invalid number of bid parameters. {len(deconstructed_bid_request)} sent, 5 expected... \n"       
         BID_REJECTED(server_socket, client_address, bid_rejection_message)
         print(bid_rejection_message)
         return bids
@@ -22,7 +22,7 @@ def bid_handling(bid_request, bids, active_auctions, item_list, server_socket, c
     # Check if the potential bid is higher than the current bid price of the item
     if item_name not in active_auctions:
         # The item in question is not currently up for auction
-        bid_rejection_message = f"BID_REJECTED {rq}: The '{item_name}' item is not currently up for auction... \n"
+        bid_rejection_message = f"BID_REJECTED|{rq}|The '{item_name}' item is not currently up for auction... \n"
         BID_REJECTED(server_socket, client_address, bid_rejection_message)
         print(bid_rejection_message)
         return bids
@@ -30,7 +30,7 @@ def bid_handling(bid_request, bids, active_auctions, item_list, server_socket, c
         current_price = active_auctions[item_name]["current_price"]
         if float(bid_amount) <= current_price:
             # The bid must be rejected by the server
-            bid_rejection_message = f"BID_REJECTED {rq}: The bid for {item_name} must be greater than the current price (i.e., {current_price})... \n"
+            bid_rejection_message = f"BID_REJECTED|{rq}|The bid for {item_name} must be greater than the current price (i.e., {current_price})... \n"
             BID_REJECTED(server_socket, client_address, bid_rejection_message)
             print(bid_rejection_message)
             return bids
@@ -43,7 +43,7 @@ def bid_handling(bid_request, bids, active_auctions, item_list, server_socket, c
 
             # Check if the bid amount is valid
             if float(bid_amount) <= starting_price:
-                bid_rejection_message = f"BID_REJECTED {rq}: The bid for {item_name} must be greater than the starting price (i.e., {starting_price})... \n"
+                bid_rejection_message = f"BID_REJECTED|{rq}|The bid for {item_name} must be greater than the starting price (i.e., {starting_price})... \n"
                 BID_REJECTED(server_socket, client_address, bid_rejection_message)
                 print(bid_rejection_message)
                 return bids
@@ -55,13 +55,13 @@ def bid_handling(bid_request, bids, active_auctions, item_list, server_socket, c
                 }
 
                 # Call the REGISTERED method to acknowledge the client's registration request
-                bid_acceptance_message = f"BID_ACCEPTED {rq} \n"
+                bid_acceptance_message = f"BID_ACCEPTED|{rq} \n"
                 BID_ACCEPTED(server_socket, client_address, bid_acceptance_message)
                 print(bid_acceptance_message)
                 return bids
         else:
             # The item in question is not currently up for auction
-            bid_rejection_message = f"BID_REJECTED {rq}: The '{item_name}' item is not currently up for auction... \n"
+            bid_rejection_message = f"BID_REJECTED|{rq}|The '{item_name}' item is not currently up for auction... \n"
             BID_REJECTED(server_socket, client_address, bid_rejection_message)
             print(bid_rejection_message)
             return bids
@@ -72,7 +72,7 @@ def bid_handling(bid_request, bids, active_auctions, item_list, server_socket, c
         bids[item_name][client_name] = bid_amount
 
         # Call the REGISTERED method to acknowledge the client's registration request
-        bid_acceptance_message = f"BID_ACCEPTED {rq} \n"
+        bid_acceptance_message = f"BID_ACCEPTED|{rq} \n"
         BID_ACCEPTED(server_socket, client_address, bid_acceptance_message)
         print(bid_acceptance_message)
         return bids
@@ -82,7 +82,7 @@ def bid_handling(bid_request, bids, active_auctions, item_list, server_socket, c
         bids[item_name][client_name] = bid_amount
 
         # Call the REGISTERED method to acknowledge the client's registration request
-        bid_acceptance_message = f"BID_ACCEPTED {rq} \n"
+        bid_acceptance_message = f"BID_ACCEPTED|{rq} \n"
         BID_ACCEPTED(server_socket, client_address, bid_acceptance_message)
         print(bid_acceptance_message)
         return bids
@@ -105,7 +105,7 @@ def BID_REJECTED(server_sock, client_addr, message):
 # This method will be used to handle user inputs for client-side deregistration.
 def bid_input_handling(rq, item_name, bid_amount, client_name, client_socket, server_address):
     # Create the message that will be sent to the server for deregistration
-    bid_request = f"BID {rq} {item_name} {bid_amount} {client_name}"
+    bid_request = f"BID|{rq}|{item_name}|{bid_amount}|{client_name}"
 
     # Call the BID method to send the bid request to the server
     BID(client_socket, server_address, bid_request)
