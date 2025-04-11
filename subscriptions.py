@@ -25,25 +25,26 @@ def subscription_handling(global_rq, subscription_request, item_list, subscripti
         message_type, rq, item_name, client_name = deconstructed_subscription_request
     
     # Check if the item is actually in the dictionary of subscriptions
-    if item_name not in subscriptions and item_name in item_list:
-        # Create a new key-value pair for this item in the dictionary of subscriptions
-        subscriptions[item_name] = {
-            "rq": rq,
-            "subscribed_clients": [client_name]
-        }
+    if item_name not in subscriptions:
+        if item_name in item_list:
+            # Create a new key-value pair for this item in the dictionary of subscriptions
+            subscriptions[item_name] = {
+                "rq": rq,
+                "subscribed_clients": [client_name]
+            }
 
-        # Call the SUBSCRIBED method to acknowledge the client's subscription request
-        subscription_confirmation_message = f"SUBSCRIBED|{rq} \n"
-        SUBSCRIBED(server_socket, client_address, subscription_confirmation_message)
-        print(subscription_confirmation_message)
-        return subscriptions, global_rq
+            # Call the SUBSCRIBED method to acknowledge the client's subscription request
+            subscription_confirmation_message = f"SUBSCRIBED|{rq} \n"
+            SUBSCRIBED(server_socket, client_address, subscription_confirmation_message)
+            print(subscription_confirmation_message)
+            return subscriptions, global_rq
 
-    else:
-        # Call the SUBSCRIPTION_DENIED method to tell the client their subscription request was invalid.
-        subscription_denial_message = f"SUBSCRIPTION_DENIED|{rq}|Item does not exist. \n"
-        SUBSCRIPTION_DENIED(server_socket, client_address, subscription_denial_message)
-        print(subscription_denial_message)
-        return subscriptions, global_rq
+        else:
+            # Call the SUBSCRIPTION_DENIED method to tell the client their subscription request was invalid.
+            subscription_denial_message = f"SUBSCRIPTION_DENIED|{rq}|Item does not exist. \n"
+            SUBSCRIPTION_DENIED(server_socket, client_address, subscription_denial_message)
+            print(subscription_denial_message)
+            return subscriptions, global_rq
 
     # Check if the user already exists in the list of subscribed clients
     if client_name in subscriptions[item_name]['subscribed_clients']:
