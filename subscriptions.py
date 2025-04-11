@@ -137,7 +137,7 @@ def subscription_input_handling(rq, item_name, name, client_socket, server_addre
 # This method will be used to handle user inputs for client-side desubscription.
 def desubscription_input_handling(rq, item_name, name, client_socket, server_address):
     # Create the message that will be sent to the server for desubscription
-    desubscription_request = f"DESUBSCRIBE|{rq}|{item_name}|{name}"
+    desubscription_request = f"DE_SUBSCRIBE|{rq}|{item_name}|{name}"
 
     # Call the DE_SUBSCRIBE method to send the desubscription request to the server
     DE_SUBSCRIBE(client_socket, server_address, desubscription_request)
