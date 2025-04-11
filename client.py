@@ -187,7 +187,7 @@ class Client:
             elif input_selection == "3" and self.role == "Buyer":
                 print("Make offer here")
             elif input_selection == "4" and self.registration_rq is not None:
-                deregistration_input_handling(self.registration_rq, self.name, self.role, self.ip_address, self.udp_port, self.tcp_port, self.udp_socket, (self.SERVER_IP, self.SERVER_UDP_PORT))
+                deregistration_input_handling(self.registration_rq, self.name, self.udp_socket, (self.SERVER_IP, self.SERVER_UDP_PORT))
            
     ## TCP Handling
     # TODO: Implement TCP Handling when modules are available
