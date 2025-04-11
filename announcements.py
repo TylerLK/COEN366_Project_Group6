@@ -52,13 +52,13 @@ def BID_UPDATE_ANNOUNCE(auction_item, active_auctions, subscription_list, listed
     """
     Sends bid update announcements to all participants of an auction.
 
-    Args:
         auction_item (str): The name of the item being auctioned.
         active_auctions (dict): A dictionary of active auctions.
         subscription_list (dict): A dictionary of item subscriptions.
+        listed_items (dict): A dictionary of listed items.
         registered_users (dict): A dictionary of registered users.
         server_socket (socket): The server's UDP socket.
-        highest_bid (int): The highest bid amount.
+        highest_bid (int): The highest bid amount. 
         bidder_name (str): The name of the user who placed the highest bid.
     """
     # Check if the current item is still actively being auctioned.
