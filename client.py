@@ -3,6 +3,7 @@ import sys
 import pickle
 import random
 import time
+import queue
 from concurrent.futures import ThreadPoolExecutor
 
 # User-Defined Modules
@@ -26,6 +27,8 @@ class Client:
         self.tcp_port = None
         self.udp_socket = None
         self.tcp_socket = None
+        self.message_queue = queue.Queue() 
+        self.pending_negotiation = None
 
         self.pool = ThreadPoolExecutor(max_workers=10) #TEST IF WE CAN ADD MORE WORKERS
 
@@ -104,22 +107,21 @@ class Client:
                 message = pickle.loads(data)
                 print(f"Message received from server: {message} \n")
 
-
                 if isinstance(message, dict):
                     request_type = message.get("Type")
                     if request_type == "NEGOTIATE_REQ":
                         self.pending_negotiation = message
-                        self.pending_negotiation = None
-                    elif "Server Response" in message and message["Server Response"] == "ITEM_LISTED":
-                        print("Item has been listed successfully!")
-                        print("Select [1] to go back to Main Menu or [2] to Wait for Negotiations")
+
+                        print(f"Press Enter key and select option [5] in main menu to respond")
+                    else:
+                        print(message)
+                        
+                        
                 elif isinstance(message, str):
-
-
-                    if "ITEM_LISTED" in message:
-                        print("Item has been listed successfully!")
+                    
+                    print(message)
                 else:
-                    print(f"Received unknown message type: {type(message)}")
+                    print(f"Received message from server: {message}")
 
             except pickle.UnpicklingError as e:
                 print(f"Faulty message received from server. Error Code: {str(e)} \n")
@@ -153,6 +155,9 @@ class Client:
             elif self.registration_rq is not None:
                 print(f"[4] Deregister from server\n")
 
+            if self.pending_negotiation is not None:
+                print(f"[5] Respond to Negotiation request")
+
             input_selection = input("Press enter key then Enter selection: ")
 
             if input_selection == "0":
@@ -162,8 +167,8 @@ class Client:
                 registration_input_handling(self.registration_rq, self.name, self.role, self.ip_address, self.udp_port, self.tcp_port, self.udp_socket, (self.SERVER_IP, self.SERVER_UDP_PORT))
 
             elif input_selection == "2" and self.role == "Seller":
-                print("List Item Selected:\n")
-                while True:
+                    print("List Item Selected:\n")
+                
                     RQ = random.randint(100, 900)
                     item_name = input("Enter item name (or type 'exit' to quit): ")
                     if item_name.lower() == "exit":
@@ -187,7 +192,12 @@ class Client:
             elif input_selection == "3" and self.role == "Buyer":
                 print("Make offer here")
             elif input_selection == "4" and self.registration_rq is not None:
+
                 deregistration_input_handling(self.registration_rq, self.name, self.udp_socket, (self.SERVER_IP, self.SERVER_UDP_PORT))
+            elif input_selection=="5" and self.pending_negotiation is not None:
+                self.handle_negotiation_request(self.pending_negotiation)
+                self.handle_negotiation_request=None
+
            
     ## TCP Handling
     # TODO: Implement TCP Handling when modules are available

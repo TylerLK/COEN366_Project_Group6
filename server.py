@@ -122,9 +122,10 @@ class Server:
         request_id = request_data.get("RQ#")
 
         for item in self.listed_items:
-            if item["Item_Name"] == item_name:
+                item=self.listed_items[item_name]
                 item["Start_Price"] = new_price
                 elapsed_time = current_time - item["Start_Time"]
+                
                 break
         else:
             print(f"Item not found: {item_name}")
@@ -133,7 +134,7 @@ class Server:
         print(f"Updated {item_name} price to {new_price}.")
 
         response = {
-            "Server Response": "PRICE_ADJUSTMENT",
+            "Type": "PRICE_ADJUSTMENT",
             "RQ#": request_id,
             "Item_Name": item_name,
             "New_Price": new_price,
