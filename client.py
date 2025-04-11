@@ -2,6 +2,7 @@ import socket
 import sys
 import pickle
 import random
+import time
 from concurrent.futures import ThreadPoolExecutor
 
 s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -39,7 +40,7 @@ class Client:
                     new_price = "REJECT"
 
                 item_name = message["Item_Name"]
-                rq = message.get("RQ#", random.randint(100, 900))
+                rq = random.randint(100, 900)
                 
                 request_data = {
                     "Type": "NEGOTIATE_RESPONSE",
@@ -93,25 +94,30 @@ class Client:
             self.udp_socket.sendto(data, (self.SERVER_IP, self.SERVER_UDP_PORT))
 
     def udpMessageReceiver(self):
+        print("UDP receiver thread started...")
         while True:
             try:
                 data, server_address = self.udp_socket.recvfrom(1024)
-                print(f"Message received from a client at {server_address[0]}:{str(server_address[1])}... \n")
-                try:
-                    message = pickle.loads(data)
-                    print(f"Message received from server: {message} \n")
-                    if message.get("Type") == "NEGOTIATE_REQ":
-                       self.handle_negotiation_request(message)
-                    else:
-                       client.menu_select()
-                    
-                except pickle.UnpicklingError as e:
-                    print(f"Faulty message received from server at {server_address[0]}:{str(server_address[1])}.  Error Code: {str(e)} \n")
-                    error_message = f"Error occurred while processing your message... \n"
-                    self.udp_socket.sendto(pickle.dumps(error_message), server_address)
+                print(f"Message received from server at {server_address[0]}:{str(server_address[1])}... \n")
+                
+                message = pickle.loads(data)
+                request_type = message.get("Type")
+                print(f"Message received from server: {message} \n")
+                
+                if request_type == "NEGOTIATE_REQ":
+                    # Instead of directly handling here, you could use a queue or flag
+                    # But for simplicity, we'll handle it directly
+                    self.handle_negotiation_request(message)
+                elif "ITEM_LISTED" in message:
+                    print("Item has been listed successfully!")
+                    print("Select [1] to go back to Main Menu or [2] to Wait for Negotiations")
+                    # Don't call menu_select() or any blocking function here
+            
+            except pickle.UnpicklingError as e:
+                print(f"Faulty message received from server. Error Code: {str(e)} \n")
             except Exception as e:
-                print(f"Error: {e}")
-
+                print(f"Error in UDP receiver: {str(e)}")
+                # Don't exit the loop on error, keep trying to receive messages
     def tcpMessageReceiver(self):
         print("TCP listener is running...")
         #need to implement TCP handling logic
@@ -166,6 +172,8 @@ class Client:
                     }
                     
                     client.udpMessageSender(request_data)
+                    
+                    
                     
             elif input_selection == "2" and self.role == "Buyer":
                 print("Browse items here")
