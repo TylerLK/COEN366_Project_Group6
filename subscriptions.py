@@ -32,7 +32,7 @@ def subscription_handling(global_rq, subscription_request, item_list, subscripti
             "subscribed_clients": [client_name]
         }
 
-        # Call the SUBSCRIBED method to akcnowledge the client's subscription request
+        # Call the SUBSCRIBED method to acknowledge the client's subscription request
         subscription_confirmation_message = f"SUBSCRIBED|{rq} \n"
         SUBSCRIBED(server_socket, client_address, subscription_confirmation_message)
         print(subscription_confirmation_message)
