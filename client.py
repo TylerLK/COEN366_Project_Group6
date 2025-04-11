@@ -3,6 +3,7 @@ import sys
 import pickle
 import random
 import time
+import queue
 from concurrent.futures import ThreadPoolExecutor
 
 s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -26,6 +27,8 @@ class Client:
         self.tcp_port = None
         self.udp_socket = None
         self.tcp_socket = None
+        self.message_queue = queue.Queue() 
+        self.pending_negotiation = None
 
         self.pool = ThreadPoolExecutor(max_workers=10) #TEST IF WE CAN ADD MORE WORKERS
     def handle_negotiation_request(self, message):
@@ -101,23 +104,29 @@ class Client:
                 print(f"Message received from server at {server_address[0]}:{str(server_address[1])}... \n")
                 
                 message = pickle.loads(data)
-                request_type = message.get("Type")
                 print(f"Message received from server: {message} \n")
                 
-                if request_type == "NEGOTIATE_REQ":
-                    # Instead of directly handling here, you could use a queue or flag
-                    # But for simplicity, we'll handle it directly
-                    self.handle_negotiation_request(message)
-                elif "ITEM_LISTED" in message:
-                    print("Item has been listed successfully!")
-                    print("Select [1] to go back to Main Menu or [2] to Wait for Negotiations")
-                    # Don't call menu_select() or any blocking function here
+                
+                if isinstance(message, dict):
+                    request_type = message.get("Type")
+                    if request_type == "NEGOTIATE_REQ":
+                        self.pending_negotiation = message
+                        print(f"Press Enter key and select option [5] in main menu to respond")
+                    else:
+                        print(message)
+                        
+                        
+                elif isinstance(message, str):
+                    
+                    print(message)
+                else:
+                    print(f"Received message from server: {message}")
             
             except pickle.UnpicklingError as e:
                 print(f"Faulty message received from server. Error Code: {str(e)} \n")
             except Exception as e:
                 print(f"Error in UDP receiver: {str(e)}")
-                # Don't exit the loop on error, keep trying to receive messages
+                # while loop to recieve messages    
     def tcpMessageReceiver(self):
         print("TCP listener is running...")
         #need to implement TCP handling logic
@@ -144,6 +153,9 @@ class Client:
             elif self.registration_rq is not None:
                 print(f"[4] Deregister from server\n")
 
+            if self.pending_negotiation is not None:
+                print(f"[5] Respond to Negotiation request")
+
             input_selection = input("Press enter key then Enter selection: ")
 
             if input_selection == "0":
@@ -153,8 +165,8 @@ class Client:
                 registration_input_handling(self.registration_rq, self.name, self.role, self.ip_address, self.udp_port, self.tcp_port, self.udp_socket, (self.SERVER_IP, self.SERVER_UDP_PORT))
 
             elif input_selection == "2" and self.role == "Seller":
-                print("List Item Selected:\n")
-                while True:
+                    print("List Item Selected:\n")
+                
                     RQ = random.randint(100, 900)
                     item_name = input("Enter item name (or type 'exit' to quit): ")
                     if item_name.lower() == "exit":
@@ -181,6 +193,9 @@ class Client:
                 print("Make offer here")
             elif input_selection == "4" and self.registration_rq is not None:
                 deregistration_input_handling(self)
+            elif input_selection=="5" and self.pending_negotiation is not None:
+                self.handle_negotiation_request(self.pending_negotiation)
+                self.handle_negotiation_request=None
            
     ## TCP Handling
     # TODO: Implement TCP Handling when modules are available

@@ -59,9 +59,10 @@ class Server:
         request_id = request_data.get("RQ#")
 
         for item in self.listed_items:
-            if item["Item_Name"] == item_name:
+                item=self.listed_items[item_name]
                 item["Start_Price"] = new_price
                 elapsed_time = current_time - item["Start_Time"]
+                
                 break
         else:
             print(f"Item not found: {item_name}")
@@ -70,7 +71,7 @@ class Server:
         print(f"Updated {item_name} price to {new_price}.")
 
         response = {
-            "Server Response": "PRICE_ADJUSTMENT",
+            "Type": "PRICE_ADJUSTMENT",
             "RQ#": request_id,
             "Item_Name": item_name,
             "New_Price": new_price,
@@ -176,6 +177,7 @@ class Server:
     def udpCommunicationHandling(self, message, client_address, udp_socket):
         try:
             print(f"A UDP Request has been received from {client_address[0]}:{str(client_address[1])}... \n")
+            print(f"Message {message}")
             request_type = message.get("Type")
             # Determine the type of message that needs to be handled, and apply the appropriate method.
             if request_type==("REGISTER"):
