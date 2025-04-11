@@ -22,7 +22,10 @@ def registration_handling(global_rq, registration_request, registered_users, ser
 
     else:
         # Create a variable for each piece of the registration request
-        message_type, rq, name, role, ip_address, udp_socket, tcp_socket = deconstructed_registration_request
+        message_type, rq, name, role, ip_address, udp_port_str, tcp_port_str = deconstructed_registration_request
+
+        udp_port = int(udp_port_str)
+        tcp_port = int(tcp_port_str)
 
     # Check if the user already exists in the dictionary of pre-existing users
     if name in registered_users:
@@ -34,7 +37,7 @@ def registration_handling(global_rq, registration_request, registered_users, ser
 
     else:
         # Add the user to the dictionary of registered users
-        registered_users[name] = {"rq": rq, "name": name, "role": role, "ip_address": ip_address, "udp_socket": udp_socket, "tcp_socket": tcp_socket}
+        registered_users[name] = {"rq": rq, "name": name, "role": role, "ip_address": ip_address, "udp_port": udp_port, "tcp_port": tcp_port}
         
         # print dictionary of registered users
         print(f"Registered Clients: {registered_users} \n")
