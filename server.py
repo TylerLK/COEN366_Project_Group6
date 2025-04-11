@@ -273,7 +273,7 @@ class Server:
 
     def startServer(self):
         # Create a UDP Datagram Socket
-        self.pool.submit(self.monitor_auctions())
+        self.pool.submit(self.monitor_auctions) ###copilot flagged saying () is unneeded
         # auction_monitor_thread = threading.Thread(target=self.monitor_auctions, daemon=True)
         # auction_monitor_thread.start()
         try:
@@ -337,7 +337,7 @@ class Server:
                     self.registered_clients, self.rq = registration_handling(self.rq, message, self.registered_clients, udp_socket, client_address)
                     # print dictionary of registered clients
                     print(f"Registered Clients: {self.registered_clients} \n")
-                    self.createLogs()
+                    self.createLogs() #copilot flagged this
 
                 elif message.startswith("DEREGISTER"):
                     self.registered_clients, self.rq = deregistration_handling(self.rq, message, self.registered_clients, udp_socket, client_address)
