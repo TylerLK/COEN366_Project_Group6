@@ -99,7 +99,7 @@ def LIST_DENIED(server_sock, client_addr, message):
 # This method will be used to handle the user input for client-side item listing.
 def list_item_input_handling(rq, item_name, item_description, start_price, duration, client_socket, server_address):
     # Create the message that will be sent to the server for item listing
-    listing_request = f"LIST_ITEM|{rq}|{item_name}|{start_price}|{duration}"
+    listing_request = f"LIST_ITEM|{rq}|{item_name}|{item_description}|{start_price}|{duration}"
 
     # Call the LIST_ITEM method to send the listing request to the server
     LIST_ITEM(client_socket, server_address, listing_request)
