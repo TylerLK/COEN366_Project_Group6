@@ -48,6 +48,7 @@ def AUCTION_ANNOUNCE(active_auctions, listed_items, subscription_list, registere
         else:
             print(f"No clients subscribed to {item_name}. No announcement sent...")
 # END AUCTION_ANNOUNCE
+
 def BID_UPDATE_ANNOUNCE(auction_item, active_auctions, subscription_list, listed_items, registered_users, server_socket, highest_bid, bidder_name):
     """
     Sends bid update announcements to all participants of an auction.
@@ -70,7 +71,7 @@ def BID_UPDATE_ANNOUNCE(auction_item, active_auctions, subscription_list, listed
         seller_rq = active_auctions[item_name].get("rq")  # RQ# for the seller
         time_left = active_auctions[item_name].get("duration") 
         # Create the bid update message for the seller
-        seller_message = f"BID_UPDATE {seller_rq} {item_name} {highest_bid} {bidder_name} {int(time_left)}"
+        seller_message = f"BID_UPDATE|{seller_rq}|{item_name}|{highest_bid}|{bidder_name}|{int(time_left)}"
 
         # Send the bid update to the seller
         seller_name = listed_items[item_name].get("seller_name")
@@ -89,7 +90,7 @@ def BID_UPDATE_ANNOUNCE(auction_item, active_auctions, subscription_list, listed
                     # Use the RQ# associated with the AUCTION_ANNOUNCE for the buyer
                     buyer_rq = subscription_list[item_name].get("rq")
                     # Create the bid update message for the buyer
-                    buyer_message = f"BID_UPDATE {buyer_rq} {item_name} {highest_bid} {bidder_name} {int(time_left)}"
+                    buyer_message = f"BID_UPDATE|{buyer_rq}|{item_name}|{highest_bid}|{bidder_name}|{int(time_left)}"
                     # Get the client's address
                     client_address = registered_users[client].get("address")
                     # Send the message to the client
