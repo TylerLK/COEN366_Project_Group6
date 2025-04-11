@@ -38,6 +38,13 @@ def subscription_handling(global_rq, subscription_request, item_list, subscripti
         print(subscription_confirmation_message)
         return subscriptions, global_rq
 
+    else:
+        # Call the SUBSCRIPTION_DENIED method to tell the client their subscription request was invalid.
+        subscription_denial_message = f"SUBSCRIPTION_DENIED|{rq}|Item does not exist. \n"
+        SUBSCRIPTION_DENIED(server_socket, client_address, subscription_denial_message)
+        print(subscription_denial_message)
+        return subscriptions, global_rq
+
     # Check if the user already exists in the list of subscribed clients
     if client_name in subscriptions[item_name]['subscribed_clients']:
         # Call the SUBSCRIPTION_DENIED method to tell the client their subscription request was invalid.
