@@ -186,7 +186,38 @@ class Server:
                     "Current_Price": item["Start_Price"],
                     "Time_Left": (item["Duration"] * 60) - elapsed_time
                 }
-                self.UDP_SOCKET.sendto(pickle.dumps(response), item["Client_Addr"])
+                self.UDP_SOCKET.sendto(pickle.dumps(response), item["Seller"])
+
+    def monitor_bids(self):
+        previous_highest_bids = {}
+        while True:
+            for item, bids in self.client_bids.items():
+                if not bids:
+                    continue
+
+                highest_bidder = None
+                highest_bid = -1
+
+                for bidder, bid in bids.items():
+                    if bid > highest_bid:
+                        highest_bid = bid
+                        highest_bidder = bidder
+
+                if item not in previous_highest_bids or highest_bid > previous_highest_bids[item]['bid']:
+                    if item in previous_highest_bids:
+                        old_highest_bidder = previous_highest_bids[item]['bidder']
+                        old_highest_bid = previous_highest_bids[item]['bid']
+                        message = f"New highest bid for '{item}': {highest_bidder} bid ${highest_bid} (previous highest was ${old_highest_bid} by {old_highest_bidder})."
+                    else:
+                        message = f"New highest bid for '{item}': {highest_bidder} bid ${highest_bid}."
+                    
+
+                previous_highest_bids[item] = {'bidder': highest_bidder, 'bid': highest_bid}
+
+            
+            
+            time.sleep(5) 
+            self.UDP_SOCKET.sendto(pickle.dumps(message), item["Seller"])
 
     def negotiation_response(self, request_data, addr):
    
@@ -256,7 +287,7 @@ class Server:
             "Start_Price": start_price,
             "Duration": duration,
             "Start_Time": start_time,
-            "Client_Addr": addr,
+            "Seller": addr,
             "Prev_Negotiated": False
         }
        
@@ -273,6 +304,7 @@ class Server:
 
     def startServer(self):
         # Create a UDP Datagram Socket
+        self.pool.submit(self.monitor_bids)
         self.pool.submit(self.monitor_auctions) ###copilot flagged saying () is unneeded
         # auction_monitor_thread = threading.Thread(target=self.monitor_auctions, daemon=True)
         # auction_monitor_thread.start()
@@ -335,12 +367,24 @@ class Server:
                 # Determine the type of message that needs to be handled, and apply the appropriate method.
                 if message.startswith("REGISTER"):
                     self.registered_clients, self.rq = registration_handling(self.rq, message, self.registered_clients, udp_socket, client_address)
-                    # print dictionary of registered clients
-                    print(f"Registered Clients: {self.registered_clients} \n")
-                    self.createLogs() #copilot flagged this
 
                 elif message.startswith("DEREGISTER"):
                     self.registered_clients, self.rq = deregistration_handling(self.rq, message, self.registered_clients, udp_socket, client_address)
+
+                elif message.startswith("SUBSCRIBE"):
+                    self.item_subscriptions, self.rq = subscription_handling(self.rq, message, self.listed_items, self.item_subscriptions, udp_socket, client_address)
+
+                elif message.startswith("DE_SUBSCRIBE"):
+                    self.item_subscriptions, self.rq = desubscription_handling(self.rq, message, self.item_subscriptions, udp_socket, client_address)
+
+                elif message.startswith("BID"):
+                    self.client_bids = bid_handling(message, self.client_bids, self.active_auctions, self.listed_items, udp_socket, client_address)
+
+                elif message.startswith("LISTT_ITEM"):
+                    self.listed_items = list_item_handling(self.rq, message, self.listed_items, udp_socket, client_address)
+
+                elif message.startswith("BID_UPDATE"):
+                    self.active_auctions = AUCTION_ANNOUNCE(message, self.active_auctions, self.client_bids, self.registered_clients , udp_socket, client_address)
 
             else:
                 reply = f"Invalid UDP communication request: {message} \n"

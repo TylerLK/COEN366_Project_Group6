@@ -41,7 +41,7 @@ class Client:
                     new_price = input("Enter new price: ")
                 else:
                     negotiation_label = "REFUSE"
-                    new_price = "REJECT"
+                    new_price = None
 
                 item_name = message["Item_Name"]
                 rq = random.randint(100, 900)
@@ -177,6 +177,8 @@ class Client:
                     start_price = input("Enter start price ($): ")
                     duration = input("Enter duration (minutes): ")
                     # list_item_input_handling(RQ, item_name, item_description, start_price, duration, self.udp_socket, (self.SERVER_IP, self.SERVER_UDP_PORT))
+                    #request_data = f"LIST_ITEM|{RQ}|{item_name}|{item_description}|{start_price}|{duration}"
+                    #print(f'"Type": "LIST_ITEM"| "RQ#": "{RQ}"| "Item_Name": "{item_name}"| "Item_Description": "{item_description}"| "Start_Price": "{start_price}"| "Duration": "{duration}"')
                     request_data = {
                         "Type": "LIST_ITEM",
                         "RQ#": RQ,
@@ -185,7 +187,8 @@ class Client:
                         "Start_Price": start_price,
                         "Duration": duration,
                     }
-                    client.udpMessageSender(request_data)     
+                    client.udpMessageSender(request_data)  
+                       
                     
             elif input_selection == "2" and self.role == "Buyer":
                 print("Browse items here")
@@ -196,7 +199,7 @@ class Client:
                 deregistration_input_handling(self.registration_rq, self.name, self.udp_socket, (self.SERVER_IP, self.SERVER_UDP_PORT))
             elif input_selection=="5" and self.pending_negotiation is not None:
                 self.handle_negotiation_request(self.pending_negotiation)
-                self.handle_negotiation_request=None
+                self.pending_negotiation=None
 
            
     ## TCP Handling

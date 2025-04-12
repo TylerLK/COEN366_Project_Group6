@@ -1,0 +1,10 @@
+{
+    "marco": {
+        "rq": "1",
+        "name": "marco",
+        "role": "Seller",
+        "ip_address": "0.0.0.0",
+        "udp_port": 50808,
+        "tcp_port": 60192
+    }
+}
