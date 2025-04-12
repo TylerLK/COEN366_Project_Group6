@@ -396,7 +396,7 @@ class Server:
                 elif message.startswith("DEREGISTER"):
                     self.registered_clients, self.rq = deregistration_handling(self.rq, message, self.registered_clients, udp_socket, client_address)
 
-                elif "DE_SUBSCRIBE" in message:
+                elif message.startswith("DE_SUBSCRIBE"):
                     self.item_subscriptions, self.rq = desubscription_handling(self.rq, message, self.item_subscriptions, udp_socket, client_address)
 
                 elif "SUBSCRIBE" in message:
