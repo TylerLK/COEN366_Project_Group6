@@ -8,7 +8,6 @@ import time
 import json
 from concurrent.futures import ThreadPoolExecutor
 
-from announcements import AUCTION_ANNOUNCE
 #from auction_update_server import listed_items
 from bids import bid_handling
 # User-Defined Modules
@@ -407,7 +406,8 @@ class Server:
 
                 
                 elif message.startswith("BID"):
-                    self.client_bids = bid_handling(message, self.client_bids, self.active_auctions, self.listed_items, udp_socket, client_address)
+                    
+                    self.client_bids = bid_handling(message, self.client_bids, self.active_auctions, self.item_subscriptions, self.registered_clients, self.listed_items, udp_socket, client_address)
 
                 elif message.startswith("LIST_ITEM"):
                     self.listed_items = list_item_handling(self.rq, message, self.listed_items, udp_socket, client_address)

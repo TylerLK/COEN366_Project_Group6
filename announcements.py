@@ -4,6 +4,7 @@ import pickle
 
 # This method will be used to send auction announcements for all items that are up for auction.
 # Call this method when: New bid is placed or another update is made to the auction (i.e., negotiation)
+
 def AUCTION_ANNOUNCE(active_auctions, listed_items, subscription_list, registered_users, server_socket, client_address):
     for item in listed_items:
         # Check if the current item is still actively being auctioned.

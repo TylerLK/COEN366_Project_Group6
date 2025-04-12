@@ -1,9 +1,10 @@
 import pickle
 
+from announcements import AUCTION_ANNOUNCE, BID_UPDATE_ANNOUNCE
 ## Server-Side Functions
 
 # This method will allow the server to internally process an incoming registration request from a client
-def bid_handling(bid_request, bids, active_auctions, item_list, server_socket, client_address):
+def bid_handling(bid_request, bids, active_auctions, subscription_list, registered_users, item_list, server_socket, client_address):
     # Deconstruct the incoming bid request message
     deconstructed_bid_request = bid_request.split("|")
 
@@ -60,9 +61,10 @@ def bid_handling(bid_request, bids, active_auctions, item_list, server_socket, c
 
                 # Call the REGISTERED method to acknowledge the client's registration request
                 bid_acceptance_message = f"BID_ACCEPTED|{rq} \n"
-                BID_ACCEPTED(server_socket, client_address, bid_acceptance_message)
+                BID_ACCEPTED(item_name, active_auctions, subscription_list, item_list, registered_users, server_socket, bid_amount, client_name,  client_address, bid_acceptance_message)
                 print(bid_acceptance_message)
                 return bids
+
         else:
             # The item in question is not currently up for auction
             bid_rejection_message = f"BID_REJECTED|{rq}|The '{item_name}' item is not currently up for auction... \n"
@@ -77,8 +79,9 @@ def bid_handling(bid_request, bids, active_auctions, item_list, server_socket, c
 
         # Call the REGISTERED method to acknowledge the client's registration request
         bid_acceptance_message = f"BID_ACCEPTED|{rq} \n"
-        BID_ACCEPTED(server_socket, client_address, bid_acceptance_message)
+        BID_ACCEPTED(item_name, active_auctions, subscription_list, item_list, registered_users, server_socket, bid_amount, client_name, client_address, bid_acceptance_message)
         print(bid_acceptance_message)
+        
         return bids
     
     else:
@@ -87,15 +90,22 @@ def bid_handling(bid_request, bids, active_auctions, item_list, server_socket, c
 
         # Call the REGISTERED method to acknowledge the client's registration request
         bid_acceptance_message = f"BID_ACCEPTED|{rq} \n"
-        BID_ACCEPTED(server_socket, client_address, bid_acceptance_message)
+        BID_ACCEPTED(item_name, active_auctions, subscription_list, item_list, registered_users, server_socket, bid_amount, client_name,  client_address, bid_acceptance_message)
         print(bid_acceptance_message)
+        
         return bids
 # END bid_handling
-
+                
 # This method will be used as a positive acknowledgement for a client's bid request.
-def BID_ACCEPTED(server_sock, client_addr, message):
-    print(f"Sending bid acceptance to client at {client_addr[0]}:{str(client_addr[1])}... \n")
-    server_sock.sendto(pickle.dumps(message), client_addr)
+def BID_ACCEPTED(item_name, active_auctions, subscription_list, item_list, registered_users, server_socket, bid_amount, client_name, client_address, message):
+    print(f"Sending bid acceptance to client at {client_address[0]}:{str(client_address[1])}... \n")
+
+    server_socket.sendto(pickle.dumps(message), client_address)
+    
+    AUCTION_ANNOUNCE(active_auctions, item_list, subscription_list, registered_users, server_socket, client_address)
+    BID_UPDATE_ANNOUNCE(item_name, active_auctions, subscription_list, item_list, registered_users, server_socket, bid_amount, client_name)
+                
+    
 # END BID_ACCEPTED
 
 # This method will be used as a negative acknowledgement for a client's bid request.
