@@ -38,7 +38,7 @@ def auction_closure_handler(global_rq, item_name, completed_auctions, active_auc
                         return completed_auctions, active_auctions, bids, item_list, global_rq
                     
                     # Send the appropriate messages to the buyer and seller clients
-                    # WINNER message to the appriopriate buyer client
+                    # WINNER message to the appropriate buyer client
                     winner_message = f"WINNER|{rq}|{item_name}|{final_price}|{seller_name}"
                     
                     # Get the buyer's IP address and TCP port number
