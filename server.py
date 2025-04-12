@@ -215,14 +215,11 @@ class Server:
                     else:
                         message = f"New highest bid for '{item}': {highest_bidder} bid ${highest_bid}."
                     
+                    self.UDP_SOCKET.sendto(pickle.dumps(message), self.listed_items[item]["Seller"])
 
                 previous_highest_bids[item] = {'bidder': highest_bidder, 'bid': highest_bid}
-
             
-            
-            time.sleep(5) 
-            self.UDP_SOCKET.sendto(pickle.dumps(message), item["Seller"])
-
+            time.sleep(5)
     def negotiation_response(self, request_data, addr):
    
      try:
