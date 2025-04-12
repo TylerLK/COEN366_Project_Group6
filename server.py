@@ -9,7 +9,7 @@ import json
 from concurrent.futures import ThreadPoolExecutor
 
 from announcements import AUCTION_ANNOUNCE
-from auction_update_server import listed_items
+#from auction_update_server import listed_items
 from bids import bid_handling
 # User-Defined Modules
 from registration import registration_handling, deregistration_handling
@@ -403,7 +403,12 @@ class Server:
 
                 elif message.startswith("ALL_LIST"):
                     message=f'"Listed Items: {self.listed_items}"'
+                    print(message)
                     self.UDP_SOCKET.sendto(pickle.dumps(message), client_address)
+
+                elif message.startswith("SUBSCRIBE"):
+                    self.item_subscriptions = subscription_handling(message, self.active_auctions, self.client_bids, self.registered_clients , udp_socket, client_address)
+
 
             else:
                 reply = f"Invalid UDP communication request: {message} \n"
