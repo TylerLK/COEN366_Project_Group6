@@ -1,0 +1,74 @@
+{
+    "iamsell": {
+        "rq": "1",
+        "name": "iamsell",
+        "role": "Seller",
+        "ip_address": "0.0.0.0",
+        "udp_port": 63659,
+        "tcp_port": 62395
+    },
+    "marco": {
+        "rq": "1",
+        "name": "marco",
+        "role": "Buyer",
+        "ip_address": "0.0.0.0",
+        "udp_port": 60950,
+        "tcp_port": 63248
+    },
+    "eodkoede": {
+        "rq": "1",
+        "name": "eodkoede",
+        "role": "Buyer",
+        "ip_address": "0.0.0.0",
+        "udp_port": 51480,
+        "tcp_port": 63795
+    },
+    "dedeo": {
+        "rq": "1",
+        "name": "dedeo",
+        "role": "Buyer",
+        "ip_address": "0.0.0.0",
+        "udp_port": 49717,
+        "tcp_port": 63973
+    },
+    "iewjoiwe": {
+        "rq": "0",
+        "name": "iewjoiwe",
+        "role": "Buyer",
+        "ip_address": "0.0.0.0",
+        "udp_port": 57618,
+        "tcp_port": 56275
+    },
+    "marcoo": {
+        "rq": "0",
+        "name": "marcoo",
+        "role": "Buyer",
+        "ip_address": "0.0.0.0",
+        "udp_port": 57903,
+        "tcp_port": 56393
+    },
+    "dieojiowe": {
+        "rq": "1",
+        "name": "dieojiowe",
+        "role": "Buyer",
+        "ip_address": "0.0.0.0",
+        "udp_port": 62368,
+        "tcp_port": 57009
+    },
+    "iojwedw": {
+        "rq": "1",
+        "name": "iojwedw",
+        "role": "Buyer",
+        "ip_address": "0.0.0.0",
+        "udp_port": 64710,
+        "tcp_port": 57234
+    },
+    "deodew": {
+        "rq": "1",
+        "name": "deodew",
+        "role": "Buyer",
+        "ip_address": "0.0.0.0",
+        "udp_port": 50398,
+        "tcp_port": 55113
+    }
+}
