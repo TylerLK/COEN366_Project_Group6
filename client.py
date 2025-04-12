@@ -192,6 +192,9 @@ class Client:
                     
             elif input_selection == "2" and self.role == "Buyer":
                 print("Browse items here")
+                message="ALL_LIST"
+                client.udpMessageSender(message)
+                
             elif input_selection == "3" and self.role == "Buyer":
                 print("Make offer here")
             elif input_selection == "4" and self.registration_rq is not None:
