@@ -196,7 +196,11 @@ class Client:
                 client.udpMessageSender(message)
                 
             elif input_selection == "3" and self.role == "Buyer":
-                print("Make offer here")
+                rq=random.randint(100, 900)
+                message=input("Enter list Item Name to subscribe")
+                response=f'"SUBSCRIBE|{rq}|{message}|{name}"'
+                client.udpMessageSender(response)
+                
             elif input_selection == "4" and self.registration_rq is not None:
 
                 deregistration_input_handling(self.registration_rq, self.name, self.udp_socket, (self.SERVER_IP, self.SERVER_UDP_PORT))
