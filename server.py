@@ -296,6 +296,7 @@ class Server:
         start_price = int(start_price)
         duration = int(duration)
         start_time = time.time()
+
         self.listed_items[item_name]={
             "Item_Name": item_name,
             "Item_Description": item_description,
@@ -305,6 +306,15 @@ class Server:
             "Seller": addr,
             "Prev_Negotiated": False
         }
+    
+        self.active_auctions[item_name] = {
+        "item_name": item_name,
+        "item_description": item_description,
+        "start_price": start_price,
+        "duration": duration,
+        "current_price": start_price,  
+        "seller": addr,
+    }
        
 
         response = {"Server Response": "ITEM_LISTED", "RQ#": request_id}
@@ -386,29 +396,29 @@ class Server:
                 elif message.startswith("DEREGISTER"):
                     self.registered_clients, self.rq = deregistration_handling(self.rq, message, self.registered_clients, udp_socket, client_address)
 
-                elif message.startswith("SUBSCRIBE"):
-                    self.item_subscriptions, self.rq = subscription_handling(self.rq, message, self.listed_items, self.item_subscriptions, udp_socket, client_address)
-
                 elif message.startswith("DE_SUBSCRIBE"):
                     self.item_subscriptions, self.rq = desubscription_handling(self.rq, message, self.item_subscriptions, udp_socket, client_address)
 
+                elif "SUBSCRIBE" in message:
+                    
+                    self.item_subscriptions, self.rq = subscription_handling(self.rq, message, self.listed_items, self.item_subscriptions, udp_socket, client_address)
+
+                
                 elif message.startswith("BID"):
                     self.client_bids = bid_handling(message, self.client_bids, self.active_auctions, self.listed_items, udp_socket, client_address)
 
                 elif message.startswith("LIST_ITEM"):
                     self.listed_items = list_item_handling(self.rq, message, self.listed_items, udp_socket, client_address)
 
-                elif message.startswith("BID_UPDATE"):
-                    self.active_auctions = AUCTION_ANNOUNCE(message, self.active_auctions, self.client_bids, self.registered_clients , udp_socket, client_address)
+                # elif message.startswith("BID_UPDATE"):
+                #     self.active_auctions = AUCTION_ANNOUNCE(message, self.active_auctions, self.client_bids, self.registered_clients , udp_socket, client_address)
 
                 elif message.startswith("ALL_LIST"):
                     message=f'"Listed Items: {self.listed_items}"'
                     print(message)
                     self.UDP_SOCKET.sendto(pickle.dumps(message), client_address)
 
-                elif message.startswith("SUBSCRIBE"):
-                    self.item_subscriptions = subscription_handling(message, self.active_auctions, self.client_bids, self.registered_clients , udp_socket, client_address)
-
+                
 
             else:
                 reply = f"Invalid UDP communication request: {message} \n"
@@ -416,6 +426,7 @@ class Server:
                 self.UDP_SOCKET.sendto(pickle.dumps(reply), client_address)
         except Exception as e:
             print(f"UDP Communication Handling failed.  Error: {str(e)} \n")
+
 
     # This method will handle incoming UDP messages from clients.
     def udpMessageReceiver(self):

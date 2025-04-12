@@ -29,6 +29,8 @@ class Client:
         self.tcp_socket = None
         self.message_queue = queue.Queue() 
         self.pending_negotiation = None
+        self.subscribed=None
+        self.subitem=None
 
         self.pool = ThreadPoolExecutor(max_workers=10) #TEST IF WE CAN ADD MORE WORKERS
 
@@ -118,8 +120,9 @@ class Client:
                         
                         
                 elif isinstance(message, str):
-                    
-                    print(message)
+                    if "SUBSCRIBED" in message:
+                        print(message)
+                        self.subscribed=1
                 else:
                     print(f"Received message from server: {message}")
 
@@ -151,7 +154,10 @@ class Client:
                 print(f"[2] List an item for auction\n")
             elif self.role == "Buyer":
                 print(f"[2] Browse items\n")
-                print(f"[3] Make an offer on an item\n")
+                print(f"[3] Subscribe to an item\n")
+                if self.subscribed is not None:
+                    print(f"[6] De-Subscribe to item\n")
+                    print(f"[7] Make Bid on item {self.subitem}")
             elif self.registration_rq is not None:
                 print(f"[4] Deregister from server\n")
 
@@ -195,18 +201,31 @@ class Client:
                 message="ALL_LIST"
                 client.udpMessageSender(message)
                 
-            elif input_selection == "3" and self.role == "Buyer":
+            elif input_selection == "3" and self.role == "Buyer" and self.subscribed is None:
                 rq=random.randint(100, 900)
-                message=input("Enter list Item Name to subscribe")
-                response=f'"SUBSCRIBE|{rq}|{message}|{name}"'
+                self.subitem=input("Enter list Item Name to Subscribe")
+                response=f'"SUBSCRIBE|{rq}|{self.subitem}|{name}"'
                 client.udpMessageSender(response)
                 
             elif input_selection == "4" and self.registration_rq is not None:
-
                 deregistration_input_handling(self.registration_rq, self.name, self.udp_socket, (self.SERVER_IP, self.SERVER_UDP_PORT))
+            
             elif input_selection=="5" and self.pending_negotiation is not None:
                 self.handle_negotiation_request(self.pending_negotiation)
                 self.pending_negotiation=None
+
+            elif input_selection=="6" and self.subscribed is not None and self.role=="Buyer":
+                rq=random.randint(100, 900)
+                response=f'"DE_SUBSCRIBE|{rq}|{self.subitem}|{name}"'
+                self.subscribed=None
+                client.udpMessageSender(response)
+
+            elif input_selection=="7" and self.subscribed is not None and self.role=="Buyer":
+                rq=random.randint(100, 900)
+                bidprice=input(f'"Enter bid price for item {self.subitem}"')
+                response=f'"BID|{rq}|{self.subitem}|{bidprice}|{name}"'
+                client.udpMessageSender(response)
+                
 
            
     ## TCP Handling
