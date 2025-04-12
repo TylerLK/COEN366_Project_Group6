@@ -1,4 +1,5 @@
 import pickle
+import time
 
 ## Server-Side Functions
 
@@ -31,13 +32,13 @@ def list_item_handling(global_rq, listing_request, listed_items, server_socket, 
             return listed_items, global_rq
 
         # Validate start price and duration
-        if not start_price.isdigit():
+        if not start_price.strip().isdigit():
             item_listing_denial_message = f"LIST_DENIED|{rq}|Start price must be an integer. \n"
             LIST_DENIED(server_socket, client_address, item_listing_denial_message)
             print(item_listing_denial_message)
             return listed_items, global_rq
 
-        if not duration.isdigit():
+        if not duration.strip().isdigit():
             item_listing_denial_message = f"LIST_DENIED|{rq}|Duration must be an integer. \n"
             LIST_DENIED(server_socket, client_address, item_listing_denial_message)
             print(item_listing_denial_message)
@@ -54,18 +55,23 @@ def list_item_handling(global_rq, listing_request, listed_items, server_socket, 
             return listed_items, global_rq
 
         # Check auction capacity
-        if len(listed_items) >= 5:
+        if len(listed_items) >= 200:
             item_listing_denial_message = f"LIST_DENIED|{rq}|Auction capacity reached."
             LIST_DENIED(server_socket, client_address, item_listing_denial_message)
             print(item_listing_denial_message)
             return listed_items, global_rq
 
         # Add the item to the listed_items dictionary
-        listed_items[item_name] = {
-            "Seller": client_address,
+
+        start_time = time.time()
+        listed_items[item_name]={
+            "Item_Name": item_name,
+            "Item_Description": item_description,
             "Start_Price": start_price,
-            "Current_Price": start_price,
-            "Duration": duration
+            "Duration": duration,
+            "Start_Time": start_time,
+            "Seller": client_address,
+            "Prev_Negotiated": False
         }
 
         # Send a success response to the client

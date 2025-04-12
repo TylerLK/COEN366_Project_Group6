@@ -190,8 +190,36 @@ class Server:
                     "Current_Price": item["Start_Price"],
                     "Time_Left": (item["Duration"] * 60) - elapsed_time
                 }
-                self.UDP_SOCKET.sendto(pickle.dumps(response), item["Client_Addr"])
+                self.UDP_SOCKET.sendto(pickle.dumps(response), item["Seller"])
 
+    def monitor_bids(self):
+        previous_highest_bids = {}
+        while True:
+            for item, bids in self.client_bids.items():
+                if not bids:
+                    continue
+
+                highest_bidder = None
+                highest_bid = -1
+
+                for bidder, bid in bids.items():
+                    if bid > highest_bid:
+                        highest_bid = bid
+                        highest_bidder = bidder
+
+                if item not in previous_highest_bids or highest_bid > previous_highest_bids[item]['bid']:
+                    if item in previous_highest_bids:
+                        old_highest_bidder = previous_highest_bids[item]['bidder']
+                        old_highest_bid = previous_highest_bids[item]['bid']
+                        message = f"New highest bid for '{item}': {highest_bidder} bid ${highest_bid} (previous highest was ${old_highest_bid} by {old_highest_bidder})."
+                    else:
+                        message = f"New highest bid for '{item}': {highest_bidder} bid ${highest_bid}."
+                    
+                    self.UDP_SOCKET.sendto(pickle.dumps(message), self.listed_items[item]["Seller"])
+
+                previous_highest_bids[item] = {'bidder': highest_bidder, 'bid': highest_bid}
+            
+            time.sleep(5)
     def negotiation_response(self, request_data, addr):
    
      try:
@@ -260,7 +288,7 @@ class Server:
             "Start_Price": start_price,
             "Duration": duration,
             "Start_Time": start_time,
-            "Client_Addr": addr,
+            "Seller": addr,
             "Prev_Negotiated": False
         }
        
@@ -277,6 +305,7 @@ class Server:
 
     def startServer(self):
         # Create a UDP Datagram Socket
+        self.pool.submit(self.monitor_bids)
         self.pool.submit(self.monitor_auctions) ###copilot flagged saying () is unneeded
         # auction_monitor_thread = threading.Thread(target=self.monitor_auctions, daemon=True)
         # auction_monitor_thread.start()
