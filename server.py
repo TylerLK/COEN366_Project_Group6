@@ -404,7 +404,7 @@ class Server:
                     self.item_subscriptions, self.rq = subscription_handling(self.rq, message, self.listed_items, self.item_subscriptions, udp_socket, client_address)
 
                 
-                elif "BID" in message:
+                elif message.startswith("BID"):
                     self.client_bids = bid_handling(message, self.client_bids, self.active_auctions, self.listed_items, udp_socket, client_address)
 
                 elif message.startswith("LIST_ITEM"):
