@@ -278,6 +278,20 @@ class Server:
             response = {"Server Response": "LIST_DENIED", "RQ#": request_id, "Reason": "Auction capacity reached"}
             self.UDP_SOCKET.sendto(pickle.dumps(response), addr)
             return
+        
+        if item_name in self.listed_items:
+            response = {"Server Response": "LIST_DENIED", "RQ#": request_id, "Reason": "Item Name already exists"}
+            self.UDP_SOCKET.sendto(pickle.dumps(response), addr)
+            return
+        if item_name==" ":
+            response = {"Server Response": "LIST_DENIED", "RQ#": request_id, "Reason": "Item Name must be filled"}
+            self.UDP_SOCKET.sendto(pickle.dumps(response), addr)
+            return
+        
+        if not item_description.strip():
+            response = {"Server Response": "LIST_DENIED", "RQ#": request_id, "Reason": "Item description must be filled"}
+            self.UDP_SOCKET.sendto(pickle.dumps(response), addr)
+            return
 
         start_price = int(start_price)
         duration = int(duration)
@@ -386,6 +400,10 @@ class Server:
 
                 elif message.startswith("BID_UPDATE"):
                     self.active_auctions = AUCTION_ANNOUNCE(message, self.active_auctions, self.client_bids, self.registered_clients , udp_socket, client_address)
+
+                elif message.startswith("ALL_LIST"):
+                    message=f'"Listed Items: {self.listed_items}"'
+                    self.UDP_SOCKET.sendto(pickle.dumps(message), client_address)
 
             else:
                 reply = f"Invalid UDP communication request: {message} \n"
