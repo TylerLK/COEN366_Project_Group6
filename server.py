@@ -288,7 +288,7 @@ class Server:
             self.UDP_SOCKET.sendto(pickle.dumps(response), addr)
             return
         
-        if item_description==" ":
+        if not item_description.strip():
             response = {"Server Response": "LIST_DENIED", "RQ#": request_id, "Reason": "Item description must be filled"}
             self.UDP_SOCKET.sendto(pickle.dumps(response), addr)
             return
