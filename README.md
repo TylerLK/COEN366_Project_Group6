@@ -6,7 +6,7 @@ Welcome to Group 6's implementation of the COEN 366 project, a Peer-to-Peer Auct
 
 ## 1. The Team
 
-Patrick Cimpean (**)
+Patrick Cimpean (*40211106*)
 
 Tyler Kassis (*40231047*)
 
