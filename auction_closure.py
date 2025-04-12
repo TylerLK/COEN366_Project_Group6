@@ -65,7 +65,7 @@ def auction_closure_handler(global_rq, item_name, completed_auctions, active_auc
                     }
                 
                 else:
-                    # NON_OFFER message to the appriopriate seller client
+                    # NON_OFFER message to the appropriate seller client
                     non_offer_message = f"NON_OFFER|{rq}|{item_name}"
                     
                     # Get the seller's IP address and TCP port number
