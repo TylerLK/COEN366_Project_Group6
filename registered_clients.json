@@ -1,0 +1,34 @@
+{
+    "iamsell": {
+        "rq": "1",
+        "name": "iamsell",
+        "role": "Seller",
+        "ip_address": "0.0.0.0",
+        "udp_port": 63659,
+        "tcp_port": 62395
+    },
+    "marco": {
+        "rq": "1",
+        "name": "marco",
+        "role": "Buyer",
+        "ip_address": "0.0.0.0",
+        "udp_port": 60950,
+        "tcp_port": 63248
+    },
+    "eodkoede": {
+        "rq": "1",
+        "name": "eodkoede",
+        "role": "Buyer",
+        "ip_address": "0.0.0.0",
+        "udp_port": 51480,
+        "tcp_port": 63795
+    },
+    "dedeo": {
+        "rq": "1",
+        "name": "dedeo",
+        "role": "Buyer",
+        "ip_address": "0.0.0.0",
+        "udp_port": 49717,
+        "tcp_port": 63973
+    }
+}

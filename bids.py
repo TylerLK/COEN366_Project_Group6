@@ -43,10 +43,10 @@ def bid_handling(bid_request, bids, active_auctions, item_list, server_socket, c
     if item_name not in bids:
         if item_name in active_auctions: # Item is up for auction
             # Check the starting price of the item, since there are no current bids for this item
-            starting_price = item_list[item_name]["start_price"]
+            starting_price = item_list[item_name]["Start_Price"]
 
             # Check if the bid amount is valid
-            if float(bid_amount) <= starting_price:
+            if int(bid_amount) <= starting_price:
                 bid_rejection_message = f"BID_REJECTED|{rq}|The bid for {item_name} must be greater than the starting price (i.e., {starting_price})... \n"
                 BID_REJECTED(server_socket, client_address, bid_rejection_message)
                 print(bid_rejection_message)

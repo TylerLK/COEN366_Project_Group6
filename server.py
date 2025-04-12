@@ -293,6 +293,9 @@ class Server:
             self.UDP_SOCKET.sendto(pickle.dumps(response), addr)
             return
 
+
+        
+
         start_price = int(start_price)
         duration = int(duration)
         start_time = time.time()
@@ -310,11 +313,10 @@ class Server:
         self.active_auctions[item_name] = {
         "item_name": item_name,
         "item_description": item_description,
-        "start_price": start_price,
         "duration": duration,
         "current_price": start_price,  
         "seller": addr,
-    }
+        }
        
 
         response = {"Server Response": "ITEM_LISTED", "RQ#": request_id}
