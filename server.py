@@ -398,7 +398,7 @@ class Server:
                 elif message.startswith("DEREGISTER"):
                     self.registered_clients, self.rq = deregistration_handling(self.rq, message, self.registered_clients, udp_socket, client_address)
 
-                elif "DE_SUBSCRIBE" in message:
+                elif message.startswith("DE_SUBSCRIBE"):
                     self.item_subscriptions, self.rq = desubscription_handling(self.rq, message, self.item_subscriptions, udp_socket, client_address)
 
                 elif "SUBSCRIBE" in message:
@@ -406,8 +406,7 @@ class Server:
                     self.item_subscriptions, self.rq = subscription_handling(self.rq, message, self.listed_items, self.item_subscriptions, udp_socket, client_address)
 
                 
-                elif "BID" in message:
-                    
+                elif message.startswith("BID"):
                     self.client_bids = bid_handling(message, self.client_bids, self.active_auctions, self.listed_items, udp_socket, client_address)
 
                 elif message.startswith("LIST_ITEM"):
