@@ -378,8 +378,9 @@ class Server:
                     self.item_subscriptions, self.rq = subscription_handling(self.rq, message, self.listed_items, self.item_subscriptions, udp_socket, client_address)
 
                 
-                elif "BID" in message:
-                    self.client_bids = bid_handling(message, self.client_bids, self.active_auctions, self.item_subscriptions, self.registered_clients, self.listed_items, udp_socket, client_address)
+                elif message.startswith("BID"):
+                    
+                    self.client_bids, self.active_auctions= bid_handling(message, self.client_bids, self.active_auctions, self.item_subscriptions, self.registered_clients, self.listed_items, udp_socket, client_address)
 
                 elif message.startswith("LIST_ITEM"):
                     self.listed_items = list_item_handling(self.rq, message, self.listed_items, udp_socket, client_address)
