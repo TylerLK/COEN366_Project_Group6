@@ -3,17 +3,7 @@
         "item_name": "Lamp",
         "item_description": "It's a lamp",
         "duration": 5,
-        "current_price": 10,
-        "seller": [
-            "127.0.0.1",
-            52386
-        ]
-    },
-    "Lamp 2": {
-        "item_name": "Lamp 2",
-        "item_description": "Illuminates",
-        "duration": 1,
-        "current_price": 1000,
+        "current_price": "1201681",
         "seller": [
             "127.0.0.1",
             52386

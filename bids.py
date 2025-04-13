@@ -18,7 +18,7 @@ def bid_handling(bid_request, bids, active_auctions, subscription_list, register
         bid_rejection_message = f"BID_REJECTED|{deconstructed_bid_request[1]}|Invalid number of bid parameters. {len(deconstructed_bid_request)} sent, 5 expected... \n"       
         BID_REJECTED(server_socket, client_address, bid_rejection_message)
         print(bid_rejection_message)
-        return bids
+        return bids, active_auctions
     
     else:
         # Create a variable for each piece of the bid request
@@ -30,7 +30,7 @@ def bid_handling(bid_request, bids, active_auctions, subscription_list, register
         bid_rejection_message = f"BID_REJECTED|{rq}|The '{item_name}' item is not currently up for auction... \n"
         BID_REJECTED(server_socket, client_address, bid_rejection_message)
         print(bid_rejection_message)
-        return bids
+        return bids,active_auctions
     else:
         current_price = active_auctions[item_name]["current_price"]
         if float(bid_amount) <= current_price:
@@ -38,7 +38,7 @@ def bid_handling(bid_request, bids, active_auctions, subscription_list, register
             bid_rejection_message = f"BID_REJECTED|{rq}|The bid for {item_name} must be greater than the current price (i.e., {current_price})... \n"
             BID_REJECTED(server_socket, client_address, bid_rejection_message)
             print(bid_rejection_message)
-            return bids
+            return bids,active_auctions
 
     # Check if the item already exists in the dictionary of pre-existing bids
     if item_name not in bids:
@@ -51,27 +51,27 @@ def bid_handling(bid_request, bids, active_auctions, subscription_list, register
                 bid_rejection_message = f"BID_REJECTED|{rq}|The bid for {item_name} must be greater than the starting price (i.e., {starting_price})... \n"
                 BID_REJECTED(server_socket, client_address, bid_rejection_message)
                 print(bid_rejection_message)
-                return bids
+                return bids,active_auctions
 
             else:
                 # Create a new key-value pair for this item in the dictionary of bids
                 bids[item_name] = {
                     client_name : bid_amount
                 }
+                active_auctions[item_name]["current_price"] = bid_amount
 
                 # Call the REGISTERED method to acknowledge the client's registration request
                 bid_acceptance_message = f"BID_ACCEPTED|{rq} \n"
                 BID_ACCEPTED(item_name, active_auctions, subscription_list, item_list, registered_users, server_socket, bid_amount, client_name,  client_address, bid_acceptance_message)
                 print(bid_acceptance_message)
-                return bids
+                return bids,active_auctions
 
         else:
             # The item in question is not currently up for auction
             bid_rejection_message = f"BID_REJECTED|{rq}|The '{item_name}' item is not currently up for auction... \n"
             BID_REJECTED(server_socket, client_address, bid_rejection_message)
             print(bid_rejection_message)
-            return bids
-
+            return bids,active_auctions
     # Check if the user has already made a bid for this item
     if client_name in bids[item_name]:
         # Update the client's bid on this item
@@ -82,18 +82,18 @@ def bid_handling(bid_request, bids, active_auctions, subscription_list, register
         BID_ACCEPTED(item_name, active_auctions, subscription_list, item_list, registered_users, server_socket, bid_amount, client_name, client_address, bid_acceptance_message)
         print(bid_acceptance_message)
         
-        return bids
+        return bids,active_auctions
     
     else:
         # Add the user to the dictionary of registered users
         bids[item_name][client_name] = bid_amount
-
+        active_auctions[item_name]["current_price"] = bid_amount
         # Call the REGISTERED method to acknowledge the client's registration request
         bid_acceptance_message = f"BID_ACCEPTED|{rq} \n"
         BID_ACCEPTED(item_name, active_auctions, subscription_list, item_list, registered_users, server_socket, bid_amount, client_name,  client_address, bid_acceptance_message)
         print(bid_acceptance_message)
         
-        return bids
+        return bids,active_auctions
 # END bid_handling
                 
 # This method will be used as a positive acknowledgement for a client's bid request.

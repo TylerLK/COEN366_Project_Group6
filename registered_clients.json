@@ -1,26 +1,10 @@
 {
-    "Marco": {
+    "Hans": {
         "rq": "1",
-        "name": "Marco",
-        "role": "Seller",
-        "ip_address": "0.0.0.0",
-        "udp_port": 52386,
-        "tcp_port": 53658
-    },
-    "Tyler": {
-        "rq": "2",
-        "name": "Tyler",
+        "name": "Hans",
         "role": "Buyer",
-        "ip_address": "0.0.0.0",
-        "udp_port": 58305,
-        "tcp_port": 53682
-    },
-    "Stan": {
-        "rq": "3",
-        "name": "Stan",
-        "role": "Buyer",
-        "ip_address": "0.0.0.0",
-        "udp_port": 62615,
-        "tcp_port": 53698
+        "ip_address": "127.0.0.1",
+        "udp_port": 62835,
+        "tcp_port": 51922
     }
 }
