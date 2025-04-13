@@ -190,35 +190,10 @@ class Server:
                     "Time_Left": (item["Duration"] * 60) - elapsed_time
                 }
                 self.UDP_SOCKET.sendto(pickle.dumps(response), item["Seller"])
+            if elapsed_time > (item["Duration"] * 60):
+                print(f"Auction for {item_name} has ended.")
+                self.active_auctions[item]["time_left"] = 0
 
-    def monitor_bids(self):
-        previous_highest_bids = {}
-        while True:
-            for item, bids in self.client_bids.items():
-                if not bids:
-                    continue
-
-                highest_bidder = None
-                highest_bid = -1
-
-                for bidder, bid in bids.items():
-                    if bid > highest_bid:
-                        highest_bid = bid
-                        highest_bidder = bidder
-
-                if item not in previous_highest_bids or highest_bid > previous_highest_bids[item]['bid']:
-                    if item in previous_highest_bids:
-                        old_highest_bidder = previous_highest_bids[item]['bidder']
-                        old_highest_bid = previous_highest_bids[item]['bid']
-                        message = f"New highest bid for '{item}': {highest_bidder} bid ${highest_bid} (previous highest was ${old_highest_bid} by {old_highest_bidder})."
-                    else:
-                        message = f"New highest bid for '{item}': {highest_bidder} bid ${highest_bid}."
-                    
-                    self.UDP_SOCKET.sendto(pickle.dumps(message), self.listed_items[item]["Seller"])
-
-                previous_highest_bids[item] = {'bidder': highest_bidder, 'bid': highest_bid}
-            
-            time.sleep(5)
     def negotiation_response(self, request_data, addr):
    
      try:
