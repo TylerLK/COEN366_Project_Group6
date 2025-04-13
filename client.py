@@ -204,7 +204,7 @@ class Client:
             elif input_selection == "3" and self.role == "Buyer":
                 rq=random.randint(100, 900)
                 self.subitem=input("Enter list Item Name to Subscribe: ")
-                response = f"SUBSCRIBE|{rq}|{self.subitem}|{name}"
+                response = f"SUBSCRIBE|{rq}|{self.subitem}|{self.name}"
                 client.udpMessageSender(response)
                 
             elif input_selection == "4" and self.registration_rq is not None:
