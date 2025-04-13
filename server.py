@@ -14,6 +14,7 @@ from bids import bid_handling
 from registration import registration_handling, deregistration_handling
 from item_listing import ITEM_LISTED, LIST_DENIED, list_item_handling
 from subscriptions import subscription_handling, desubscription_handling
+from auction_closure import auction_closure_handler
 
 
 # Server Class
@@ -180,7 +181,7 @@ class Server:
             elapsed_time = current_time - item["Start_Time"]
             half_duration = (item["Duration"] * 60) / 2
 
-            if elapsed_time > half_duration and item_name not in self.client_bids and not item["Prev_Negotiated"]:
+            if elapsed_time > half_duration and item_name not in self.client_bids  and not item.get("Prev_Negotiated", False):
                 item["Prev_Negotiated"] = True
                 print(f"Sending negotiation request for {item['Item_Name']}")
                 response = {
@@ -190,9 +191,12 @@ class Server:
                     "Time_Left": (item["Duration"] * 60) - elapsed_time
                 }
                 self.UDP_SOCKET.sendto(pickle.dumps(response), item["Seller"])
-            if elapsed_time > (item["Duration"] * 60):
+            if elapsed_time>(item["Duration"] * 60):
+                global_rq = self.rq
+                server_socket = self.UDP_SOCKET
                 print(f"Auction for {item_name} has ended.")
-                self.active_auctions[item]["time_left"] = 0
+                self.active_auctions[item_name]["time_left"] = 0
+                self.completed_auctions, self.active_auctions, self.client_bids, self.listed_items, self.rq= auction_closure_handler(global_rq, item_name, self.completed_auctions, self.active_auctions, self.listed_items, self.client_bids, self.registered_clients, server_socket)
 
     def negotiation_response(self, request_data, addr):
      try:
@@ -235,6 +239,7 @@ class Server:
         item_description = request_data.get("Item_Description")
         start_price = request_data.get("Start_Price")
         duration = request_data.get("Duration")
+        name= request_data.get("seller_name")
 
         
 
@@ -276,6 +281,7 @@ class Server:
 
         self.listed_items[item_name]={
             "Item_Name": item_name,
+            "seller_name": name,
             "Item_Description": item_description,
             "Start_Price": start_price,
             "Duration": duration,
@@ -287,6 +293,7 @@ class Server:
         self.active_auctions[item_name] = {
         "item_name": item_name,
         "item_description": item_description,
+        "time_left": duration,
         "duration": duration,
         "current_price": start_price,  
         "seller": addr,
@@ -307,7 +314,7 @@ class Server:
         # Create a UDP Datagram Socket
         
         self.pool.submit(self.monitor_auctions) ###copilot flagged saying () is unneeded
-        # auction_monitor_thread = threading.Thread(target=self.monitor_auctions, daemon=True)
+        #auction_monitor_thread = threading.Thread(target=self.monitor_auctions, daemon=True)
         # auction_monitor_thread.start()
         try:
             self.UDP_SOCKET = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -441,6 +448,8 @@ class Server:
     def handle_tcp_client(self, client_socket, client_address):
         try:
             data = client_socket.recv(1024)
+            
+
             if not data:
                 print(f"TCP Client {client_address} disconnected.")
                 client_socket.close()
@@ -449,7 +458,7 @@ class Server:
             print(f"Received TCP message from {client_address}: {message}")
 
             # TODO: Add logic here to handle messages
-
+            
             # Echo for now:
             response = f"Server received your message: {message}"
             client_socket.send(pickle.dumps(response)) #test

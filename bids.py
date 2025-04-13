@@ -103,7 +103,7 @@ def BID_ACCEPTED(item_name, active_auctions, subscription_list, item_list, regis
     server_socket.sendto(pickle.dumps(message), client_address)
     print(f"{item_name}")
     AUCTION_ANNOUNCE(active_auctions, item_list, subscription_list, registered_users, server_socket, client_address)
-    #BID_UPDATE_ANNOUNCE(item_name, active_auctions, subscription_list, item_list, registered_users, server_socket, bid_amount, client_name)
+    BID_UPDATE_ANNOUNCE(item_name, active_auctions, subscription_list, item_list, registered_users, server_socket, bid_amount, client_name)
                 
     
 # END BID_ACCEPTED
