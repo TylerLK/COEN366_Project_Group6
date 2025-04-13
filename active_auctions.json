@@ -18,5 +18,15 @@
             "127.0.0.1",
             52386
         ]
+    },
+    "goat": {
+        "item_name": "goat",
+        "item_description": "mint",
+        "duration": 1,
+        "current_price": 2,
+        "seller": [
+            "127.0.0.1",
+            49665
+        ]
     }
 }
