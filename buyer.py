@@ -157,7 +157,7 @@ class Client:
                 print(f"[3] Subscribe to an item \n")
                 if self.subscribed is not None:
                     print(f"[6] De-Subscribe to item \n")
-                    print(f"[7] Make Bid on item {self.subitem}: ")
+                    print(f"[7] Make Bid on item {self.subitem}")
             elif self.registration_rq is not None:
                 print(f"[4] Deregister from server \n")
 
@@ -204,7 +204,7 @@ class Client:
             elif input_selection == "3" and self.role == "Buyer":
                 rq=random.randint(100, 900)
                 self.subitem=input("Enter list Item Name to Subscribe: ")
-                response = f"SUBSCRIBE|{rq}|{self.subitem}|{self.name}"
+                response = f"SUBSCRIBE|{rq}|{self.subitem}|{name}"
                 client.udpMessageSender(response)
                 
             elif input_selection == "4" and self.registration_rq is not None:
@@ -216,7 +216,8 @@ class Client:
 
             elif input_selection=="6" and self.subscribed is not None and self.role=="Buyer":
                 rq = random.randint(100, 900)
-                response = f"DE_SUBSCRIBE|{rq}|{self.subitem}|{self.name}"
+                response = f"DE_SUBSCRIBE|{rq}|{self.subitem}|{name}"
+                self.subscribed = None
                 client.udpMessageSender(response)
 
             elif input_selection=="7" and self.subscribed is not None and self.role=="Buyer":

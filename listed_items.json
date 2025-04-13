@@ -1,73 +1,25 @@
 {
-    "mint": {
-        "Item_Name": "mint",
-        "Item_Description": "mint",
-        "Start_Price": 2,
-        "Duration": 1,
-        "Start_Time": 1744473478.2414997,
+    "Lamp": {
+        "Item_Name": "Lamp",
+        "Item_Description": "It's a lamp",
+        "Start_Price": 10,
+        "Duration": 5,
+        "Start_Time": 1744504697.3626103,
         "Seller": [
             "127.0.0.1",
-            53715
+            52386
         ],
-        "Prev_Negotiated": true
+        "Prev_Negotiated": false
     },
-    "iamsell": {
-        "Item_Name": "iamsell",
-        "Item_Description": "mint",
-        "Start_Price": 2,
+    "Lamp 2": {
+        "Item_Name": "Lamp 2",
+        "Item_Description": "Illuminates",
+        "Start_Price": 50,
         "Duration": 1,
-        "Start_Time": 1744475461.9629056,
+        "Start_Time": 1744504830.212971,
         "Seller": [
             "127.0.0.1",
-            63659
-        ],
-        "Prev_Negotiated": true
-    },
-    "lamp": {
-        "Item_Name": "lamp",
-        "Item_Description": "lamp",
-        "Start_Price": 2,
-        "Duration": 2,
-        "Start_Time": 1744476240.6951783,
-        "Seller": [
-            "127.0.0.1",
-            62679
-        ],
-        "Prev_Negotiated": true
-    },
-    "manny": {
-        "Item_Name": "manny",
-        "Item_Description": "fr",
-        "Start_Price": 2,
-        "Duration": 1,
-        "Start_Time": 1744476409.4544914,
-        "Seller": [
-            "127.0.0.1",
-            58425
-        ],
-        "Prev_Negotiated": true
-    },
-    "idek": {
-        "Item_Name": "idek",
-        "Item_Description": "dede",
-        "Start_Price": 2,
-        "Duration": 1,
-        "Start_Time": 1744476502.996105,
-        "Seller": [
-            "127.0.0.1",
-            58559
-        ],
-        "Prev_Negotiated": true
-    },
-    "ms": {
-        "Item_Name": "ms",
-        "Item_Description": "deed",
-        "Start_Price": 2,
-        "Duration": 1,
-        "Start_Time": 1744476878.1561327,
-        "Seller": [
-            "127.0.0.1",
-            54041
+            52386
         ],
         "Prev_Negotiated": true
     }

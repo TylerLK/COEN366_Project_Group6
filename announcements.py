@@ -47,7 +47,7 @@ def AUCTION_ANNOUNCE(active_auctions, listed_items, subscription_list, registere
                 print(f"Seller {seller_name} not found in registered users.")
             
         else:
-            print(f"No clients subscribed to {item_name}. No announcement sent...")
+            print(f"No clients subscribed this item. No announcement sent...")
 # END AUCTION_ANNOUNCE
 
 def BID_UPDATE_ANNOUNCE(auction_item, active_auctions, subscription_list, listed_items, registered_users, server_socket, highest_bid, bidder_name):
