@@ -157,7 +157,7 @@ class Client:
                 print(f"[3] Subscribe to an item \n")
                 if self.subscribed is not None:
                     print(f"[6] De-Subscribe to item \n")
-                    print(f"[7] Make Bid on item {self.subitem}: ")
+                    print(f"[7] Make Bid on item {self.subitem}")
             elif self.registration_rq is not None:
                 print(f"[4] Deregister from server \n")
 

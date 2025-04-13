@@ -416,7 +416,7 @@ class Server:
                 #     self.active_auctions = AUCTION_ANNOUNCE(message, self.active_auctions, self.client_bids, self.registered_clients , udp_socket, client_address)
 
                 elif message.startswith("ALL_LIST"):
-                    message=f'"Listed Items: {self.listed_items}"'
+                    message = f"Listed Items: {self.listed_items}"
                     print(message)
                     self.UDP_SOCKET.sendto(pickle.dumps(message), client_address)
 

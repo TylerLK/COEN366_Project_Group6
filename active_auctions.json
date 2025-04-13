@@ -1,57 +1,22 @@
 {
-    "iamsell": {
-        "Item_Name": "iamsell",
-        "Item_Description": "mint",
-        "Start_Price": 2,
-        "Duration": 1,
-        "Start_Time": 1744475461.9629056,
-        "Seller": [
+    "Lamp": {
+        "item_name": "Lamp",
+        "item_description": "It's a lamp",
+        "duration": 5,
+        "current_price": 10,
+        "seller": [
             "127.0.0.1",
-            63659
-        ],
-        "Prev_Negotiated": false
-    },
-    "lamp": {
-        "Item_Name": "lamp",
-        "Item_Description": "lamp",
-        "Start_Price": 2,
-        "Duration": 2,
-        "current_price": 1744476240.6951783,
-        "Seller": [
-            "127.0.0.1",
-            62679
+            52386
         ]
     },
-    "manny": {
-        "Item_Name": "manny",
-        "Item_Description": "fr",
-        "Start_Price": 2,
-        "Duration": 1,
-        "current_price": 1744476409.4544914,
-        "Seller": [
+    "Lamp 2": {
+        "item_name": "Lamp 2",
+        "item_description": "Illuminates",
+        "duration": 1,
+        "current_price": 1000,
+        "seller": [
             "127.0.0.1",
-            58425
-        ]
-    },
-    "idek": {
-        "Item_Name": "idek",
-        "Item_Description": "dede",
-        "Start_Price": 2,
-        "Duration": 1,
-        "current_price": 1744476502.996105,
-        "Seller": [
-            "127.0.0.1",
-            58559
-        ]
-    },
-    "ms": {
-        "Item_Name": "ms",
-        "Item_Description": "deed",
-        "Duration": 1,
-        "current_price": 2,
-        "Seller": [
-            "127.0.0.1",
-            54041
+            52386
         ]
     }
 }
