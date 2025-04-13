@@ -1,49 +1,9 @@
 {
-    "mint": {
-        "rq": "120",
+    "Lamp": {
+        "rq": "113",
         "subscribed_clients": [
-            "marco\"",
-            "hansel\"",
-            "mam\""
-        ]
-    },
-    "iamsell": {
-        "rq": "159",
-        "subscribed_clients": [
-            "iambuy\""
-        ]
-    },
-    "idek": {
-        "rq": "229",
-        "subscribed_clients": [
-            "dekodkoede\""
-        ]
-    },
-    "ms": {
-        "rq": "810",
-        "subscribed_clients": [
-            "dkedkoekweod\"",
-            "djediweod\"",
-            "djeioiowd\"",
-            "fkokfeooprf\"",
-            "eoijdwoiwej\"",
-            "djiodjweiowde\"",
-            "fiojfifo\"",
-            "djioejw\"",
-            "diweojwiojdwod\"",
-            "ijoiewd\"",
-            "dweijdiowe\"",
-            "eidjewojoe\"",
-            "jioejwd\"",
-            "koiewjfei\"",
-            "iojdejdfoeijdw\"",
-            "ejiodjwuiode\"",
-            "jeiodjw\"",
-            "iewjoiwe\"",
-            "marcoo\"",
-            "dieojiowe\"",
-            "iojwedw\"",
-            "deodew\""
+            "Tyler",
+            "Stan"
         ]
     }
 }
