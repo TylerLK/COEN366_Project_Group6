@@ -22,5 +22,17 @@
             52386
         ],
         "Prev_Negotiated": true
+    },
+    "goat": {
+        "Item_Name": "goat",
+        "Item_Description": "mint",
+        "Start_Price": 2,
+        "Duration": 1,
+        "Start_Time": 1744508417.1933477,
+        "Seller": [
+            "127.0.0.1",
+            49665
+        ],
+        "Prev_Negotiated": true
     }
 }

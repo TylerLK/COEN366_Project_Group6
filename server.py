@@ -173,7 +173,7 @@ class Server:
 
     def monitor_auctions(self):
      while True:
-        time.sleep(5)
+        time.sleep(1)
         current_time = time.time()
 
         for item_name, item in list(self.listed_items.items()):
@@ -195,34 +195,34 @@ class Server:
                 self.active_auctions[item]["time_left"] = 0
 
     def negotiation_response(self, request_data, addr):
-   
      try:
         current_time = time.time()
         item_name = request_data.get("Item_Name")
         new_price = int(request_data.get("New Price"))
         request_id = request_data.get("RQ#")
 
-        for item in self.listed_items:
-                item=self.listed_items[item_name]
-                item["Start_Price"] = new_price
-                elapsed_time = current_time - item["Start_Time"]
+        if item_name in self.listed_items:
+            self.listed_items[item_name]["Start_Price"] = new_price
+            elapsed_time = current_time - self.listed_items[item_name]["Start_Time"]
+            
+            
+            if item_name in self.active_auctions:
+                self.active_auctions[item_name]["current_price"] = new_price
                 
-                break
+            print(f"Updated {item_name} price to {new_price}.")
+            
+            response = {
+                "Type": "PRICE_ADJUSTMENT",
+                "RQ#": request_id,
+                "Item_Name": item_name,
+                "New_Price": new_price,
+                "Time Left": elapsed_time
+            }
+            
+            self.UDP_SOCKET.sendto(pickle.dumps(response), addr)
         else:
             print(f"Item not found: {item_name}")
             return
-
-        print(f"Updated {item_name} price to {new_price}.")
-
-        response = {
-            "Type": "PRICE_ADJUSTMENT",
-            "RQ#": request_id,
-            "Item_Name": item_name,
-            "New_Price": new_price,
-            "Time Left": elapsed_time
-        }
-        self.UDP_SOCKET.sendto(pickle.dumps(response), addr)
-        
 
      except Exception as e:
         print(f"Error processing negotiation: {e}")
@@ -305,7 +305,7 @@ class Server:
 
     def startServer(self):
         # Create a UDP Datagram Socket
-        self.pool.submit(self.monitor_bids)
+        
         self.pool.submit(self.monitor_auctions) ###copilot flagged saying () is unneeded
         # auction_monitor_thread = threading.Thread(target=self.monitor_auctions, daemon=True)
         # auction_monitor_thread.start()

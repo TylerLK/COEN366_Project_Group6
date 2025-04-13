@@ -18,5 +18,11 @@
             "Yoshi",
             "Hans"
         ]
+    },
+    "goat": {
+        "rq": "587",
+        "subscribed_clients": [
+            "idek"
+        ]
     }
 }
