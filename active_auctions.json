@@ -8,15 +8,5 @@
             "127.0.0.1",
             52386
         ]
-    },
-    "Lamp 2": {
-        "item_name": "Lamp 2",
-        "item_description": "Illuminates",
-        "duration": 1,
-        "current_price": 1000,
-        "seller": [
-            "127.0.0.1",
-            52386
-        ]
     }
 }

@@ -11,9 +11,10 @@ def AUCTION_ANNOUNCE(active_auctions, listed_items, subscription_list, registere
         if item in active_auctions:
             # Get the specific item name that is up for auction.
             item_name = item
+            print("ITEM: ", item_name)
 
             # Get specific item details for the auction announcement
-            rq = active_auctions[item_name].get("rq")
+            rq = subscription_list[item_name].get("rq")
             item_description = active_auctions[item_name].get("item_description")
             current_price = active_auctions[item_name].get("current_price")
             time_left = active_auctions[item_name].get("duration")
@@ -23,13 +24,14 @@ def AUCTION_ANNOUNCE(active_auctions, listed_items, subscription_list, registere
 
             # Send all the auction announcement to all subscribed clients
             if item_name in subscription_list:
-                for client in subscription_list[item_name]:
+                for client in subscription_list[item_name]["subscribed_clients"]:
                     # Check if the client is in registered_users
+                    print("CLIENT: ", client , "ITEM: ", item_name)
                     if client in registered_users:
                         # Get the client's address
-                        client_address = registered_users[client].get("address")
+                        client_address = "127.0.0.1", registered_users[client].get("udp_port")
                         # Send the message to the client
-                        server_socket.sendto(message.encode(), client_address)
+                        server_socket.sendto(pickle.dumps(message), client_address)
                         print(f"AUCTION_ANNOUNCE sent to {client} ({client_address}) for item: {item_name}")
                     
                     else:
@@ -40,7 +42,7 @@ def AUCTION_ANNOUNCE(active_auctions, listed_items, subscription_list, registere
 
             if seller_name and seller_name in registered_users:
                 seller_address = registered_users[seller_name].get("address")
-                server_socket.sendto(message.encode(), seller_address)
+                server_socket.sendto(pickle.dumps(message), seller_address)
                 print(f"AUCTION_ANNOUNCE sent to seller {seller_name} ({seller_address}) for item: {item_name}")
 
             else:
