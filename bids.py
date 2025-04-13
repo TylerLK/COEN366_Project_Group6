@@ -101,8 +101,7 @@ def BID_ACCEPTED(item_name, active_auctions, subscription_list, item_list, regis
     print(f"Sending bid acceptance to client at {client_address[0]}:{str(client_address[1])}... \n")
 
     server_socket.sendto(pickle.dumps(message), client_address)
-    print(f"{item_name}")
-    AUCTION_ANNOUNCE(active_auctions, item_list, subscription_list, registered_users, server_socket, client_address)
+    # Removed unnecessary debug print statement for item_name
     #BID_UPDATE_ANNOUNCE(item_name, active_auctions, subscription_list, item_list, registered_users, server_socket, bid_amount, client_name)
                 
     
