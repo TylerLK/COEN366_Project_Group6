@@ -190,8 +190,10 @@ class Server:
                     "Time_Left": (item["Duration"] * 60) - elapsed_time
                 }
                 self.UDP_SOCKET.sendto(pickle.dumps(response), item["Seller"])
+            if elapsed_time > (item["Duration"] * 60):
+                print(f"Auction for {item_name} has ended.")
+                self.active_auctions[item]["time_left"] = 0
 
-    
     def negotiation_response(self, request_data, addr):
      try:
         current_time = time.time()
