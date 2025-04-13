@@ -216,8 +216,7 @@ class Client:
 
             elif input_selection=="6" and self.subscribed is not None and self.role=="Buyer":
                 rq = random.randint(100, 900)
-                response = f"DE_SUBSCRIBE|{rq}|{self.subitem}|{name}"
-                self.subscribed = None
+                response = f"DE_SUBSCRIBE|{rq}|{self.subitem}|{self.name}"
                 client.udpMessageSender(response)
 
             elif input_selection=="7" and self.subscribed is not None and self.role=="Buyer":
