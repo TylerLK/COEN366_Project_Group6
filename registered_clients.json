@@ -1,10 +1,10 @@
 {
-    "pleaseplease": {
+    "Hans": {
         "rq": "1",
-        "name": "pleaseplease",
+        "name": "Hans",
         "role": "Buyer",
-        "ip_address": "0.0.0.0",
-        "udp_port": 54818,
-        "tcp_port": 50685
+        "ip_address": "127.0.0.1",
+        "udp_port": 62835,
+        "tcp_port": 51922
     }
 }

@@ -79,15 +79,15 @@ def BID_UPDATE_ANNOUNCE(auction_item, active_auctions, subscription_list, listed
         # Send the bid update to the seller
         seller_name = listed_items[item_name].get("seller_name")
         if seller_name and seller_name in registered_users:
-            seller_address = registered_users[seller_name].get("address")
-            server_socket.sendto(seller_message.encode(), seller_address)
+            seller_address = "127.0.0.1", registered_users[seller_name].get("udp_port")
+            server_socket.sendto(pickle.dumps(seller_message), seller_address)
             print(f"BID_UPDATE sent to seller {seller_name} ({seller_address}) for item: {item_name}")
         else:
             print(f"Seller {seller_name} not found in registered users.")
 
         # Send the bid update to all subscribed clients
         if item_name in subscription_list:
-            for client in subscription_list[item_name]:
+            for client in subscription_list[item_name]["subscribed_clients"]:
                 # Check if the client is in registered_users
                 if client in registered_users:
                     # Use the RQ# associated with the AUCTION_ANNOUNCE for the buyer
@@ -95,9 +95,9 @@ def BID_UPDATE_ANNOUNCE(auction_item, active_auctions, subscription_list, listed
                     # Create the bid update message for the buyer
                     buyer_message = f"BID_UPDATE|{buyer_rq}|{item_name}|{highest_bid}|{bidder_name}|{int(time_left)}"
                     # Get the client's address
-                    client_address = registered_users[client].get("address")
+                    client_address = "127.0.0.1", registered_users[client].get("udp_port")
                     # Send the message to the client
-                    server_socket.sendto(buyer_message.encode(), client_address)
+                    server_socket.sendto(pickle.dumps(buyer_message), client_address)
                     print(f"BID_UPDATE sent to buyer {client} ({client_address}) for item: {item_name}")
                 else:
                     print(f"Client {client} not found in registered users. Skipping...")

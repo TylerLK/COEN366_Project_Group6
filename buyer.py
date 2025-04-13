@@ -22,7 +22,7 @@ class Client:
     def __init__(self, name, role):
         self.name = name
         self.role = role
-        self.ip_address = '0.0.0.0'
+        self.ip_address = '127.0.0.1'
         self.udp_port = None
         self.tcp_port = None
         self.udp_socket = None
